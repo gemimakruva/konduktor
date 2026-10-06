@@ -13,6 +13,7 @@
     "@konduktor/shared": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^26.6.4",
     "tsx": "^4.19.0",
     "typescript": "^5.5.0"
   }
