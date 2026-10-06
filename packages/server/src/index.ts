@@ -7,6 +7,7 @@ import { sessionsRouter } from './routes/sessions.js';
 import { settingsRouter } from './routes/settings.js';
 import { chatHistoryRouter } from './routes/chat-history.js';
 import { searchRouter } from './routes/search.js';
+import { capabilitiesRouter } from './routes/capabilities.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
@@ -21,6 +22,7 @@ export function createApp(): Express {
   app.use('/api/settings', settingsRouter);
   app.use('/api/chat', chatHistoryRouter);
   app.use('/api/search', searchRouter);
+  app.use('/api/capabilities', capabilitiesRouter);
 
   app.get('/api/health', (_req, res) => {
     const claude = detectClaude();
