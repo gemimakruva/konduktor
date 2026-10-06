@@ -4,6 +4,7 @@ import { ChatPanel } from './components/chat/ChatPanel';
 import { SessionsPage } from './components/sessions/SessionsPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { CapabilitiesPage } from './components/capabilities/CapabilitiesPage';
+import { SystemPage } from './components/system/SystemPage';
 
 export function App() {
   return (
@@ -12,6 +13,7 @@ export function App() {
         <Route path="/" element={<ChatPanel />} />
         <Route path="/sessions" element={<SessionsPage />} />
         <Route path="/capabilities" element={<CapabilitiesPage />} />
+        <Route path="/system" element={<SystemPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </Layout>
