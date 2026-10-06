@@ -1,0 +1,76 @@
+import { useState, useCallback } from 'react';
+import type { ChatMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
+import { useWebSocket } from './useWebSocket';
+
+export function useChat() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
+  const handleMessage = useCallback((msg: WsServerMessage) => {
+    if (msg.type === 'chat:stream') {
+      setIsStreaming(true);
+      setActiveSessionId(msg.sessionId);
+      const event = msg.event as StreamEvent;
+
+      if (event.type === 'assistant' && event.content) {
+        const text = event.content
+          .filter(b => b.type === 'text' && b.text)
+          .map(b => b.text)
+          .join('');
+        if (!text) return;
+
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === 'assistant' && last.isStreaming) {
+            return [...prev.slice(0, -1), { ...last, content: last.content + text }];
+          }
+          return [...prev, {
+            id: crypto.randomUUID(),
+            role: 'assistant' as const,
+            content: text,
+            timestamp: Date.now(),
+            isStreaming: true,
+          }];
+        });
+      }
+    }
+
+    if (msg.type === 'chat:end') {
+      setIsStreaming(false);
+      setMessages(prev => prev.map(m =>
+        m.isStreaming ? { ...m, isStreaming: false } : m
+      ));
+    }
+
+    if (msg.type === 'chat:error') {
+      setIsStreaming(false);
+      setMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        role: 'system' as const,
+        content: `Error: ${msg.error}`,
+        timestamp: Date.now(),
+      }]);
+    }
+  }, []);
+
+  const { connected, send } = useWebSocket(handleMessage);
+
+  const sendMessage = useCallback((prompt: string) => {
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'user' as const,
+      content: prompt,
+      timestamp: Date.now(),
+    }]);
+    send({ type: 'chat:start', prompt });
+  }, [send]);
+
+  const stopChat = useCallback(() => {
+    if (activeSessionId) {
+      send({ type: 'chat:stop', sessionId: activeSessionId });
+    }
+  }, [send, activeSessionId]);
+
+  return { messages, isStreaming, connected, sendMessage, stopChat };
+}
