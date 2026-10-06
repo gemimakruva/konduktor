@@ -50,4 +50,15 @@ export const MIGRATIONS = [
     INSERT INTO chat_history_fts(chat_history_fts, rowid, session_id, role, content)
     VALUES ('delete', old.id, old.session_id, old.role, old.content);
   END`,
+  `CREATE TABLE IF NOT EXISTS kanban_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    column_name TEXT NOT NULL DEFAULT 'backlog',
+    session_id TEXT,
+    position INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch()),
+    updated_at INTEGER DEFAULT (unixepoch())
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_kanban_column ON kanban_tasks(column_name)`,
 ];

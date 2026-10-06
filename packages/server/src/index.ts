@@ -10,6 +10,7 @@ import { searchRouter } from './routes/search.js';
 import { capabilitiesRouter } from './routes/capabilities.js';
 import { systemRouter } from './routes/system.js';
 import { logsRouter } from './routes/logs.js';
+import { kanbanRouter } from './routes/kanban.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
@@ -27,6 +28,7 @@ export function createApp(): Express {
   app.use('/api/capabilities', capabilitiesRouter);
   app.use('/api/system', systemRouter);
   app.use('/api/logs', logsRouter);
+  app.use('/api/kanban', kanbanRouter);
 
   app.get('/api/health', (_req, res) => {
     const claude = detectClaude();

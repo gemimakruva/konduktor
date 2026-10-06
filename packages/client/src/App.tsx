@@ -6,6 +6,7 @@ import { SettingsPage } from './components/settings/SettingsPage';
 import { CapabilitiesPage } from './components/capabilities/CapabilitiesPage';
 import { SystemPage } from './components/system/SystemPage';
 import { LogsPage } from './components/logs/LogsPage';
+import { KanbanPage } from './components/kanban/KanbanPage';
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
         <Route path="/capabilities" element={<CapabilitiesPage />} />
         <Route path="/logs" element={<LogsPage />} />
         <Route path="/system" element={<SystemPage />} />
+        <Route path="/kanban" element={<KanbanPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </Layout>
