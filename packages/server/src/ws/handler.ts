@@ -1,12 +1,15 @@
 import type { WebSocket } from 'ws';
-import type { WsClientMessage, WsServerMessage } from '@konduktor/shared';
+import type { WsClientMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
 import { DEFAULTS, LIMITS } from '@konduktor/shared';
 import { readFileSync } from 'node:fs';
 import { ClaudeProcess } from '../claude/cli.js';
 import { SessionManager } from '../claude/sessions.js';
 import { ChatRepository } from '../db/chat-repository.js';
+import { StreamBuffer } from './stream-buffer.js';
 import { getDb } from '../db/connection.js';
 import { CONFIG } from '../config.js';
+
+const sessionBuffers = new Map<string, StreamBuffer<StreamEvent>>();
 
 const mgr = new SessionManager();
 
@@ -40,6 +43,11 @@ function startProcess(
 ): void {
   const proc = new ClaudeProcess(sessionId);
 
+  if (!sessionBuffers.has(sessionId)) {
+    sessionBuffers.set(sessionId, new StreamBuffer<StreamEvent>(LIMITS.streamBufferSize));
+  }
+  const buffer = sessionBuffers.get(sessionId)!;
+
   proc.on('event', (event) => {
     if (event.type === 'rate_limit_event') {
       send(ws, { type: 'rate_limit', sessionId, retryAfterMs: (event as any).retryAfterMs || 30000 });
@@ -49,7 +57,8 @@ function startProcess(
       send(ws, { type: 'chat:init', sessionId, init: event as any });
       return;
     }
-    send(ws, { type: 'chat:stream', sessionId, event });
+    const idx = buffer.push(event);
+    send(ws, { type: 'chat:stream', sessionId, event, eventIndex: idx });
   });
 
   proc.on('close', () => {
@@ -132,6 +141,14 @@ export function createWsHandler() {
           send(ws, { type: 'chat:history', sessionId: msg.sessionId, messages });
         } catch {
           send(ws, { type: 'chat:history', sessionId: msg.sessionId, messages: [] });
+        }
+      }
+
+      if (msg.type === 'chat:reconnect') {
+        const buf = sessionBuffers.get(msg.sessionId);
+        if (buf) {
+          const events = buf.getSince(msg.lastEventIndex);
+          send(ws, { type: 'chat:replay', sessionId: msg.sessionId, events, currentIndex: buf.currentIndex });
         }
       }
 
