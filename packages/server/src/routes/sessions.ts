@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { SessionManager } from '../claude/sessions.js';
 
 const mgr = new SessionManager();
-export const sessionsRouter = Router();
+export const sessionsRouter: RouterType = Router();
 
 sessionsRouter.get('/', (req, res) => {
   const all = req.query.all === 'true';

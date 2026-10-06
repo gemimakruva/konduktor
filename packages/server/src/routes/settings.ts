@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Settings } from '@konduktor/shared';
 import { DEFAULTS } from '@konduktor/shared';
 import { CONFIG } from '../config.js';
 
-export const settingsRouter = Router();
+export const settingsRouter: RouterType = Router();
 
 function loadSettings(): Settings {
   try {

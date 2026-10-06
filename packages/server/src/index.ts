@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Express } from 'express';
 import { createServer } from 'node:http';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
@@ -8,7 +8,7 @@ import { settingsRouter } from './routes/settings.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 
-export function createApp() {
+export function createApp(): Express {
   const app = express();
   app.use(cors());
   app.use(express.json());
