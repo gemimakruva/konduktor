@@ -1,12 +1,12 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import type { Session } from '@konduktor/shared';
 import { CONFIG } from '../config.js';
 
 export class SessionManager {
   list(includeAll = false): Session[] {
     try {
-      const flags = includeAll ? '--json --all' : '--json';
-      const output = execSync(`${CONFIG.claudeBin} agents ${flags}`, {
+      const args = includeAll ? ['agents', '--json', '--all'] : ['agents', '--json'];
+      const output = execFileSync(CONFIG.claudeBin, args, {
         encoding: 'utf-8',
         timeout: 10_000,
       });
@@ -27,7 +27,7 @@ export class SessionManager {
 
   stop(sessionId: string): boolean {
     try {
-      execSync(`${CONFIG.claudeBin} stop ${sessionId}`, { timeout: 10_000 });
+      execFileSync(CONFIG.claudeBin, ['stop', sessionId], { timeout: 10_000 });
       return true;
     } catch {
       return false;
@@ -36,7 +36,7 @@ export class SessionManager {
 
   remove(sessionId: string): boolean {
     try {
-      execSync(`${CONFIG.claudeBin} rm ${sessionId}`, { timeout: 10_000 });
+      execFileSync(CONFIG.claudeBin, ['rm', sessionId], { timeout: 10_000 });
       return true;
     } catch {
       return false;

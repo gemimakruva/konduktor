@@ -7,11 +7,13 @@ import { sessionsRouter } from './routes/sessions.js';
 import { settingsRouter } from './routes/settings.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
+import { pinAuth } from './middleware/pin-auth.js';
 
 export function createApp(): Express {
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use(pinAuth);
 
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/settings', settingsRouter);

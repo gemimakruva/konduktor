@@ -1,11 +1,14 @@
 import type { WebSocket } from 'ws';
 import type { WsClientMessage, WsServerMessage } from '@konduktor/shared';
-import { LIMITS } from '@konduktor/shared';
+import { DEFAULTS, LIMITS } from '@konduktor/shared';
+import { readFileSync } from 'node:fs';
 import { ClaudeProcess } from '../claude/cli.js';
 import { SessionManager } from '../claude/sessions.js';
+import { CONFIG } from '../config.js';
 
-const activeProcesses = new Map<string, ClaudeProcess>();
 const mgr = new SessionManager();
+
+let globalProcessCount = 0;
 
 function send(ws: WebSocket, msg: WsServerMessage): void {
   if (ws.readyState === ws.OPEN) {
@@ -13,8 +16,19 @@ function send(ws: WebSocket, msg: WsServerMessage): void {
   }
 }
 
+function loadMaxConcurrent(): number {
+  try {
+    const raw = JSON.parse(readFileSync(CONFIG.settingsPath, 'utf-8'));
+    const val = raw.maxConcurrentSessions;
+    if (typeof val === 'number' && val >= 1 && val <= LIMITS.maxConcurrentSessions) return val;
+  } catch { /* use default */ }
+  return DEFAULTS.maxConcurrentSessions;
+}
+
 export function createWsHandler() {
   return (ws: WebSocket) => {
+    const connectionProcesses = new Map<string, ClaudeProcess>();
+
     ws.on('message', (raw) => {
       let msg: WsClientMessage;
       try {
@@ -25,8 +39,9 @@ export function createWsHandler() {
       }
 
       if (msg.type === 'chat:start') {
-        if (activeProcesses.size >= LIMITS.maxConcurrentSessions) {
-          send(ws, { type: 'error', message: `Max ${LIMITS.maxConcurrentSessions} concurrent sessions` });
+        const maxConcurrent = loadMaxConcurrent();
+        if (globalProcessCount >= maxConcurrent) {
+          send(ws, { type: 'error', message: `Max ${maxConcurrent} concurrent sessions` });
           return;
         }
 
@@ -38,25 +53,29 @@ export function createWsHandler() {
         });
 
         proc.on('close', () => {
-          activeProcesses.delete(sessionId);
+          connectionProcesses.delete(sessionId);
+          globalProcessCount--;
           const lastEvent = { type: 'result' as const, result: 'Session ended' };
           send(ws, { type: 'chat:end', sessionId, result: lastEvent });
         });
 
         proc.on('error', (err: Error) => {
-          activeProcesses.delete(sessionId);
+          connectionProcesses.delete(sessionId);
+          globalProcessCount--;
           send(ws, { type: 'chat:error', sessionId, error: err.message });
         });
 
-        activeProcesses.set(sessionId, proc);
+        connectionProcesses.set(sessionId, proc);
+        globalProcessCount++;
         proc.start(msg.prompt, { cwd: msg.cwd, model: msg.model });
       }
 
       if (msg.type === 'chat:stop') {
-        const proc = activeProcesses.get(msg.sessionId);
+        const proc = connectionProcesses.get(msg.sessionId);
         if (proc) {
           proc.kill();
-          activeProcesses.delete(msg.sessionId);
+          connectionProcesses.delete(msg.sessionId);
+          globalProcessCount--;
         }
       }
 
@@ -66,9 +85,12 @@ export function createWsHandler() {
     });
 
     ws.on('close', () => {
-      for (const [id, proc] of activeProcesses) {
-        if (proc.isRunning) proc.kill();
-        activeProcesses.delete(id);
+      for (const [id, proc] of connectionProcesses) {
+        if (proc.isRunning) {
+          proc.kill();
+          globalProcessCount--;
+        }
+        connectionProcesses.delete(id);
       }
     });
   };

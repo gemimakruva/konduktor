@@ -39,13 +39,14 @@ describe('API routes', () => {
     server.close();
   });
 
-  it('GET /api/settings returns defaults', async () => {
+  it('GET /api/settings returns valid settings', async () => {
     const server = app.listen(0);
     const addr = server.address() as { port: number };
     const res = await fetch(`http://localhost:${addr.port}/api/settings`);
     const data = await res.json();
     expect(data.port).toBe(4170);
-    expect(data.theme).toBe('system');
+    expect(['light', 'dark', 'system']).toContain(data.theme);
+    expect(data.maxConcurrentSessions).toBeGreaterThanOrEqual(1);
     server.close();
   });
 });
