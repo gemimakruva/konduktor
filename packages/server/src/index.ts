@@ -5,6 +5,7 @@ import { WebSocketServer } from 'ws';
 import { CONFIG } from './config.js';
 import { sessionsRouter } from './routes/sessions.js';
 import { settingsRouter } from './routes/settings.js';
+import { chatHistoryRouter } from './routes/chat-history.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
@@ -17,6 +18,7 @@ export function createApp(): Express {
 
   app.use('/api/sessions', sessionsRouter);
   app.use('/api/settings', settingsRouter);
+  app.use('/api/chat', chatHistoryRouter);
 
   app.get('/api/health', (_req, res) => {
     const claude = detectClaude();

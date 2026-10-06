@@ -4,6 +4,8 @@ import { DEFAULTS, LIMITS } from '@konduktor/shared';
 import { readFileSync } from 'node:fs';
 import { ClaudeProcess } from '../claude/cli.js';
 import { SessionManager } from '../claude/sessions.js';
+import { ChatRepository } from '../db/chat-repository.js';
+import { getDb } from '../db/connection.js';
 import { CONFIG } from '../config.js';
 
 const mgr = new SessionManager();
@@ -23,6 +25,49 @@ function loadMaxConcurrent(): number {
     if (typeof val === 'number' && val >= 1 && val <= LIMITS.maxConcurrentSessions) return val;
   } catch { /* use default */ }
   return DEFAULTS.maxConcurrentSessions;
+}
+
+function getChatRepo(): ChatRepository {
+  return new ChatRepository(getDb());
+}
+
+function startProcess(
+  ws: WebSocket,
+  sessionId: string,
+  prompt: string,
+  connectionProcesses: Map<string, ClaudeProcess>,
+  opts: { cwd?: string; model?: string; resume?: string },
+): void {
+  const proc = new ClaudeProcess(sessionId);
+
+  proc.on('event', (event) => {
+    if (event.type === 'rate_limit_event') {
+      send(ws, { type: 'rate_limit', sessionId, retryAfterMs: (event as any).retryAfterMs || 30000 });
+      return;
+    }
+    if (event.type === 'system' && event.subtype === 'init') {
+      send(ws, { type: 'chat:init', sessionId, init: event as any });
+      return;
+    }
+    send(ws, { type: 'chat:stream', sessionId, event });
+  });
+
+  proc.on('close', () => {
+    connectionProcesses.delete(sessionId);
+    globalProcessCount--;
+    const lastEvent = { type: 'result' as const, result: 'Session ended' };
+    send(ws, { type: 'chat:end', sessionId, result: lastEvent });
+  });
+
+  proc.on('error', (err: Error) => {
+    connectionProcesses.delete(sessionId);
+    globalProcessCount--;
+    send(ws, { type: 'chat:error', sessionId, error: err.message });
+  });
+
+  connectionProcesses.set(sessionId, proc);
+  globalProcessCount++;
+  proc.start(prompt, opts);
 }
 
 export function createWsHandler() {
@@ -46,28 +91,30 @@ export function createWsHandler() {
         }
 
         const sessionId = msg.sessionId || crypto.randomUUID();
-        const proc = new ClaudeProcess(sessionId);
 
-        proc.on('event', (event) => {
-          send(ws, { type: 'chat:stream', sessionId, event });
+        try {
+          getChatRepo().saveMessage(sessionId, 'user', msg.prompt);
+        } catch { /* DB write failure is non-fatal */ }
+
+        startProcess(ws, sessionId, msg.prompt, connectionProcesses, {
+          cwd: msg.cwd, model: msg.model,
         });
+      }
 
-        proc.on('close', () => {
-          connectionProcesses.delete(sessionId);
-          globalProcessCount--;
-          const lastEvent = { type: 'result' as const, result: 'Session ended' };
-          send(ws, { type: 'chat:end', sessionId, result: lastEvent });
+      if (msg.type === 'chat:message') {
+        const maxConcurrent = loadMaxConcurrent();
+        if (globalProcessCount >= maxConcurrent) {
+          send(ws, { type: 'error', message: `Max ${maxConcurrent} concurrent sessions` });
+          return;
+        }
+
+        try {
+          getChatRepo().saveMessage(msg.sessionId, 'user', msg.prompt);
+        } catch { /* DB write failure is non-fatal */ }
+
+        startProcess(ws, msg.sessionId, msg.prompt, connectionProcesses, {
+          cwd: msg.cwd, model: msg.model, resume: msg.sessionId,
         });
-
-        proc.on('error', (err: Error) => {
-          connectionProcesses.delete(sessionId);
-          globalProcessCount--;
-          send(ws, { type: 'chat:error', sessionId, error: err.message });
-        });
-
-        connectionProcesses.set(sessionId, proc);
-        globalProcessCount++;
-        proc.start(msg.prompt, { cwd: msg.cwd, model: msg.model });
       }
 
       if (msg.type === 'chat:stop') {
@@ -76,6 +123,15 @@ export function createWsHandler() {
           proc.kill();
           connectionProcesses.delete(msg.sessionId);
           globalProcessCount--;
+        }
+      }
+
+      if (msg.type === 'chat:history') {
+        try {
+          const messages = getChatRepo().getHistory(msg.sessionId);
+          send(ws, { type: 'chat:history', sessionId: msg.sessionId, messages });
+        } catch {
+          send(ws, { type: 'chat:history', sessionId: msg.sessionId, messages: [] });
         }
       }
 

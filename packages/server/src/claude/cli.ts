@@ -20,6 +20,13 @@ export function parseStreamLine(line: string): StreamEvent | null {
     if (sub === 'hook_started' || sub === 'hook_response' || sub === 'hook_progress') {
       return null;
     }
+    if (sub === 'init') {
+      return {
+        type: 'system', subtype: 'init',
+        tools: (parsed.tools as string[]) || [],
+        model: parsed.model as string,
+      } as unknown as StreamEvent;
+    }
     return { type: 'system', subtype: sub } as StreamEvent;
   }
 
@@ -63,6 +70,13 @@ export function parseStreamLine(line: string): StreamEvent | null {
       costUsd: parsed.total_cost_usd as number,
       usage,
     };
+  }
+
+  if (parsed.type === 'rate_limit_event') {
+    return {
+      type: 'rate_limit_event',
+      retryAfterMs: (parsed.retry_after_ms as number) || 30000,
+    } as unknown as StreamEvent;
   }
 
   return null;
