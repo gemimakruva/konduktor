@@ -1,0 +1,111 @@
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  model?: string;
+  usage?: TokenUsage;
+  isStreaming?: boolean;
+}
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  thinkingTokens: number;
+  costUsd: number;
+}
+
+export interface Session {
+  pid: number;
+  cwd: string;
+  kind: 'interactive' | 'background' | 'cloud';
+  startedAt: number;
+  sessionId: string;
+  name: string;
+  status: 'busy' | 'idle' | 'completed' | 'error';
+}
+
+export interface StreamEvent {
+  type: 'system' | 'assistant' | 'result' | 'rate_limit_event';
+  subtype?: string;
+  content?: ContentBlock[];
+  result?: string;
+  isError?: boolean;
+  sessionId?: string;
+  usage?: TokenUsage;
+  model?: string;
+  durationMs?: number;
+  costUsd?: number;
+}
+
+export interface ContentBlock {
+  type: 'text' | 'tool_use' | 'tool_result' | 'thinking';
+  text?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
+export interface CliInitEvent {
+  type: 'system';
+  subtype: 'init';
+  tools: string[];
+  mcpServers: McpServerInfo[];
+  model: string;
+  plugins: PluginInfo[];
+  skills: string[];
+}
+
+export interface McpServerInfo {
+  name: string;
+  status: 'connected' | 'failed';
+  error?: string;
+}
+
+export interface PluginInfo {
+  name: string;
+  version: string;
+  enabled: boolean;
+}
+
+export interface Capability {
+  type: 'mcp' | 'plugin' | 'skill' | 'tool';
+  name: string;
+  status: 'installed' | 'available' | 'missing';
+  description?: string;
+  installCommand?: string;
+  requiredConfig?: string[];
+}
+
+export interface ClaudeCodeInfo {
+  installed: boolean;
+  version?: string;
+  path?: string;
+  authenticated: boolean;
+  model?: string;
+}
+
+export interface Settings {
+  theme: 'light' | 'dark' | 'system';
+  port: number;
+  maxConcurrentSessions: number;
+  defaultModel: string;
+  defaultEffort: 'low' | 'medium' | 'high';
+  lanAccess: boolean;
+  pinCode?: string;
+}
+
+export type WsClientMessage =
+  | { type: 'chat:start'; prompt: string; cwd?: string; model?: string; sessionId?: string }
+  | { type: 'chat:stop'; sessionId: string }
+  | { type: 'chat:resume'; sessionId: string }
+  | { type: 'sessions:list' }
+  | { type: 'sessions:stop'; sessionId: string };
+
+export type WsServerMessage =
+  | { type: 'chat:stream'; sessionId: string; event: StreamEvent }
+  | { type: 'chat:end'; sessionId: string; result: StreamEvent }
+  | { type: 'chat:error'; sessionId: string; error: string }
+  | { type: 'sessions:update'; sessions: Session[] }
+  | { type: 'error'; message: string };
