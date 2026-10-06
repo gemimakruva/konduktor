@@ -2,13 +2,14 @@ import { useState, useCallback } from 'react';
 import type { ChatMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
 import { useWebSocket } from './useWebSocket';
 
-export function useChat() {
+export function useChat(tabSessionId: string | null = null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(tabSessionId);
 
   const handleMessage = useCallback((msg: WsServerMessage) => {
     if (msg.type === 'chat:stream') {
+      if (activeSessionId && msg.sessionId !== activeSessionId) return;
       setIsStreaming(true);
       setActiveSessionId(msg.sessionId);
       const event = msg.event as StreamEvent;
@@ -52,7 +53,30 @@ export function useChat() {
         timestamp: Date.now(),
       }]);
     }
-  }, []);
+
+    if (msg.type === 'chat:history') {
+      setMessages(msg.messages);
+    }
+
+    if (msg.type === 'chat:replay') {
+      for (const event of msg.events) {
+        if (event.type === 'assistant' && event.content) {
+          const text = event.content
+            .filter(b => b.type === 'text' && b.text)
+            .map(b => b.text)
+            .join('');
+          if (text) {
+            setMessages(prev => [...prev, {
+              id: crypto.randomUUID(),
+              role: 'assistant' as const,
+              content: text,
+              timestamp: Date.now(),
+            }]);
+          }
+        }
+      }
+    }
+  }, [activeSessionId]);
 
   const { connected, send } = useWebSocket(handleMessage);
 
@@ -63,8 +87,13 @@ export function useChat() {
       content: prompt,
       timestamp: Date.now(),
     }]);
-    send({ type: 'chat:start', prompt });
-  }, [send]);
+
+    if (activeSessionId) {
+      send({ type: 'chat:message', sessionId: activeSessionId, prompt });
+    } else {
+      send({ type: 'chat:start', prompt });
+    }
+  }, [send, activeSessionId]);
 
   const stopChat = useCallback(() => {
     if (activeSessionId) {
@@ -72,5 +101,5 @@ export function useChat() {
     }
   }, [send, activeSessionId]);
 
-  return { messages, isStreaming, connected, sendMessage, stopChat };
+  return { messages, isStreaming, connected, sendMessage, stopChat, activeSessionId };
 }
