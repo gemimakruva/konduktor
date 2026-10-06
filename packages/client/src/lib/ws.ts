@@ -8,6 +8,8 @@ class WsClient {
   private handlers = new Set<MessageHandler>();
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastEventIndex = new Map<string, number>();
+  private activeSessionId: string | null = null;
 
   connect(): void {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -15,10 +17,18 @@ class WsClient {
 
     this.socket.onopen = () => {
       this.reconnectAttempts = 0;
+      if (this.activeSessionId) {
+        const lastIdx = this.lastEventIndex.get(this.activeSessionId) ?? 0;
+        this.send({ type: 'chat:reconnect', sessionId: this.activeSessionId, lastEventIndex: lastIdx });
+      }
     };
 
     this.socket.onmessage = (event) => {
       const msg = JSON.parse(event.data) as WsServerMessage;
+      if (msg.type === 'chat:stream' && msg.eventIndex !== undefined) {
+        this.lastEventIndex.set(msg.sessionId, msg.eventIndex);
+        this.activeSessionId = msg.sessionId;
+      }
       this.handlers.forEach(h => h(msg));
     };
 

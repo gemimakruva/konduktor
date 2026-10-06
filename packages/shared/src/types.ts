@@ -98,14 +98,20 @@ export interface Settings {
 
 export type WsClientMessage =
   | { type: 'chat:start'; prompt: string; cwd?: string; model?: string; sessionId?: string }
+  | { type: 'chat:message'; sessionId: string; prompt: string; cwd?: string; model?: string }
   | { type: 'chat:stop'; sessionId: string }
-  | { type: 'chat:resume'; sessionId: string }
+  | { type: 'chat:history'; sessionId: string }
+  | { type: 'chat:reconnect'; sessionId: string; lastEventIndex: number }
   | { type: 'sessions:list' }
   | { type: 'sessions:stop'; sessionId: string };
 
 export type WsServerMessage =
-  | { type: 'chat:stream'; sessionId: string; event: StreamEvent }
+  | { type: 'chat:stream'; sessionId: string; event: StreamEvent; eventIndex?: number }
   | { type: 'chat:end'; sessionId: string; result: StreamEvent }
   | { type: 'chat:error'; sessionId: string; error: string }
+  | { type: 'chat:history'; sessionId: string; messages: ChatMessage[] }
+  | { type: 'chat:init'; sessionId: string; init: CliInitEvent }
+  | { type: 'chat:replay'; sessionId: string; events: StreamEvent[]; currentIndex: number }
+  | { type: 'rate_limit'; sessionId: string; retryAfterMs: number }
   | { type: 'sessions:update'; sessions: Session[] }
   | { type: 'error'; message: string };

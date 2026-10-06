@@ -38,4 +38,27 @@ export const MIGRATIONS = [
   `CREATE INDEX IF NOT EXISTS idx_analytics_model ON analytics(model)`,
   `CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_history(session_id)`,
   `CREATE INDEX IF NOT EXISTS idx_capabilities_type ON capabilities(type)`,
+  `CREATE VIRTUAL TABLE IF NOT EXISTS chat_history_fts USING fts5(
+    session_id, role, content,
+    content='chat_history', content_rowid='id'
+  )`,
+  `CREATE TRIGGER IF NOT EXISTS chat_history_ai AFTER INSERT ON chat_history BEGIN
+    INSERT INTO chat_history_fts(rowid, session_id, role, content)
+    VALUES (new.id, new.session_id, new.role, new.content);
+  END`,
+  `CREATE TRIGGER IF NOT EXISTS chat_history_ad AFTER DELETE ON chat_history BEGIN
+    INSERT INTO chat_history_fts(chat_history_fts, rowid, session_id, role, content)
+    VALUES ('delete', old.id, old.session_id, old.role, old.content);
+  END`,
+  `CREATE TABLE IF NOT EXISTS kanban_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    column_name TEXT NOT NULL DEFAULT 'backlog',
+    session_id TEXT,
+    position INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch()),
+    updated_at INTEGER DEFAULT (unixepoch())
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_kanban_column ON kanban_tasks(column_name)`,
 ];
