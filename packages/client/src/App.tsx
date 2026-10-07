@@ -11,6 +11,7 @@ import { AgentWatch } from './components/agents/AgentWatch';
 import { AnalyticsPage } from './components/analytics/AnalyticsPage';
 import { SchedulesPage } from './components/schedules/SchedulesPage';
 import { ArtifactsPage } from './components/artifacts/ArtifactsPage';
+import { ProfilesPage } from './components/profiles/ProfilesPage';
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/schedules" element={<SchedulesPage />} />
         <Route path="/artifacts" element={<ArtifactsPage />} />
+        <Route path="/profiles" element={<ProfilesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </Layout>
