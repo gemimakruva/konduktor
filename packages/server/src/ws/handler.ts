@@ -16,7 +16,7 @@ const sessionBuffers = new Map<string, StreamBuffer<StreamEvent>>();
 
 const mgr = new SessionManager();
 
-let globalProcessCount = 0;
+const activeProcessIds = new Set<string>();
 
 function send(ws: WebSocket, msg: WsServerMessage): void {
   if (ws.readyState === ws.OPEN) {
@@ -59,6 +59,10 @@ function startProcess(
   }
   const buffer = sessionBuffers.get(sessionId)!;
 
+  let assistantText = '';
+  let resultModel: string | undefined;
+  let resultUsage: StreamEvent['usage'];
+
   proc.on('event', (event) => {
     if (event.type === 'rate_limit_event') {
       send(ws, { type: 'rate_limit', sessionId, retryAfterMs: (event as any).retryAfterMs || 30000 });
@@ -70,6 +74,17 @@ function startProcess(
     }
     const idx = buffer.push(event);
     send(ws, { type: 'chat:stream', sessionId, event, eventIndex: idx });
+
+    if (event.type === 'assistant' && event.content) {
+      for (const block of event.content) {
+        if (block.type === 'text' && block.text) assistantText += block.text;
+      }
+    }
+
+    if (event.type === 'result') {
+      resultModel = event.model;
+      resultUsage = event.usage;
+    }
 
     const artifactInputs = extractArtifactFromEvent(event);
     for (const input of artifactInputs) {
@@ -97,19 +112,24 @@ function startProcess(
 
   proc.on('close', () => {
     connectionProcesses.delete(sessionId);
-    globalProcessCount--;
+    activeProcessIds.delete(sessionId);
+
+    if (assistantText) {
+      try {
+        getChatRepo().saveMessage(sessionId, 'assistant', assistantText, resultModel, resultUsage);
+      } catch { /* DB write failure is non-fatal */ }
+    }
+
     const lastEvent = { type: 'result' as const, result: 'Session ended' };
     send(ws, { type: 'chat:end', sessionId, result: lastEvent });
   });
 
   proc.on('error', (err: Error) => {
-    connectionProcesses.delete(sessionId);
-    globalProcessCount--;
     send(ws, { type: 'chat:error', sessionId, error: err.message });
   });
 
   connectionProcesses.set(sessionId, proc);
-  globalProcessCount++;
+  activeProcessIds.add(sessionId);
   proc.start(prompt, opts);
 }
 
@@ -128,7 +148,7 @@ export function createWsHandler() {
 
       if (msg.type === 'chat:start') {
         const maxConcurrent = loadMaxConcurrent();
-        if (globalProcessCount >= maxConcurrent) {
+        if (activeProcessIds.size >= maxConcurrent) {
           send(ws, { type: 'error', message: `Max ${maxConcurrent} concurrent sessions` });
           return;
         }
@@ -146,7 +166,7 @@ export function createWsHandler() {
 
       if (msg.type === 'chat:message') {
         const maxConcurrent = loadMaxConcurrent();
-        if (globalProcessCount >= maxConcurrent) {
+        if (activeProcessIds.size >= maxConcurrent) {
           send(ws, { type: 'error', message: `Max ${maxConcurrent} concurrent sessions` });
           return;
         }
@@ -162,11 +182,7 @@ export function createWsHandler() {
 
       if (msg.type === 'chat:stop') {
         const proc = connectionProcesses.get(msg.sessionId);
-        if (proc) {
-          proc.kill();
-          connectionProcesses.delete(msg.sessionId);
-          globalProcessCount--;
-        }
+        if (proc) proc.kill();
       }
 
       if (msg.type === 'chat:history') {
@@ -192,12 +208,8 @@ export function createWsHandler() {
     });
 
     ws.on('close', () => {
-      for (const [id, proc] of connectionProcesses) {
-        if (proc.isRunning) {
-          proc.kill();
-          globalProcessCount--;
-        }
-        connectionProcesses.delete(id);
+      for (const [, proc] of connectionProcesses) {
+        if (proc.isRunning) proc.kill();
       }
     });
   };

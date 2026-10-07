@@ -9,8 +9,8 @@ export function useNotifications() {
   useEffect(() => {
     const fetchEnabled = () =>
       fetch('/api/settings')
-        .then(r => r.json())
-        .then(s => setEnabled(!!s.desktopNotifications))
+        .then(r => r.ok ? r.json() : null)
+        .then(s => { if (s) setEnabled(!!s.desktopNotifications); })
         .catch(() => {});
     fetchEnabled();
     const handler = () => fetchEnabled();

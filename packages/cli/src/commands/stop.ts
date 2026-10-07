@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { readPid, clearPid } from '../daemon.js';
 
 export async function stop() {
@@ -7,7 +8,11 @@ export async function stop() {
     return;
   }
   try {
-    process.kill(pid, 'SIGTERM');
+    if (process.platform === 'win32') {
+      execSync(`taskkill /pid ${pid} /t /f`, { stdio: 'ignore' });
+    } else {
+      process.kill(pid, 'SIGTERM');
+    }
     clearPid();
     console.log(`Konduktor stopped (pid ${pid})`);
   } catch {

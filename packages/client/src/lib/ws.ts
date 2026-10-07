@@ -6,6 +6,7 @@ type MessageHandler = (msg: WsServerMessage) => void;
 class WsClient {
   private socket: WebSocket | null = null;
   private handlers = new Set<MessageHandler>();
+  private connectionHandlers = new Set<(connected: boolean) => void>();
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private lastEventIndex = new Map<string, number>();
@@ -17,6 +18,7 @@ class WsClient {
 
     this.socket.onopen = () => {
       this.reconnectAttempts = 0;
+      this.connectionHandlers.forEach(h => h(true));
       if (this.activeSessionId) {
         const lastIdx = this.lastEventIndex.get(this.activeSessionId) ?? 0;
         this.send({ type: 'chat:reconnect', sessionId: this.activeSessionId, lastEventIndex: lastIdx });
@@ -33,12 +35,18 @@ class WsClient {
     };
 
     this.socket.onclose = () => {
+      this.connectionHandlers.forEach(h => h(false));
       this.tryReconnect();
     };
 
     this.socket.onerror = () => {
       this.socket?.close();
     };
+  }
+
+  onConnectionChange(handler: (connected: boolean) => void): () => void {
+    this.connectionHandlers.add(handler);
+    return () => this.connectionHandlers.delete(handler);
   }
 
   private tryReconnect(): void {

@@ -9,18 +9,17 @@ export function useWebSocket(onMessage: (msg: WsServerMessage) => void) {
 
   useEffect(() => {
     wsClient.connect();
+    setConnected(wsClient.connected);
 
     const unsub = wsClient.subscribe((msg) => {
       handlerRef.current(msg);
     });
 
-    const interval = setInterval(() => {
-      setConnected(wsClient.connected);
-    }, 1000);
+    const unsubConn = wsClient.onConnectionChange(setConnected);
 
     return () => {
       unsub();
-      clearInterval(interval);
+      unsubConn();
     };
   }, []);
 

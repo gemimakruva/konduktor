@@ -17,6 +17,21 @@ export function useChat(tabSessionId: string | null = null) {
   const [lastCompletedResult, setLastCompletedResult] = useState<string | null>(null);
   const [cronCompletion, setCronCompletion] = useState<{ jobName: string; status: string } | null>(null);
 
+  const streamingRef = useRef(false);
+  const prevTabSessionId = useRef<string | null>(tabSessionId);
+  const historyLoaded = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (prevTabSessionId.current !== tabSessionId) {
+      setMessages([]);
+      setIsStreaming(false);
+      streamingRef.current = false;
+      setActiveSessionId(tabSessionId);
+      historyLoaded.current = null;
+      prevTabSessionId.current = tabSessionId;
+    }
+  }, [tabSessionId]);
+
   const handleMessage = useCallback((msg: WsServerMessage) => {
     if (msg.type === 'artifact:saved') {
       const a = msg.artifact;
@@ -27,6 +42,7 @@ export function useChat(tabSessionId: string | null = null) {
     if (msg.type === 'chat:stream') {
       if (activeSessionId && msg.sessionId !== activeSessionId) return;
       setIsStreaming(true);
+      streamingRef.current = true;
       setActiveSessionId(msg.sessionId);
       const event = msg.event as StreamEvent;
 
@@ -60,6 +76,7 @@ export function useChat(tabSessionId: string | null = null) {
 
     if (msg.type === 'chat:end') {
       setIsStreaming(false);
+      streamingRef.current = false;
       setMessages(prev => {
         const lastMsg = prev[prev.length - 1];
         if (lastMsg?.role === 'assistant') {
@@ -75,6 +92,7 @@ export function useChat(tabSessionId: string | null = null) {
 
     if (msg.type === 'chat:error') {
       setIsStreaming(false);
+      streamingRef.current = false;
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'system' as const,
@@ -84,7 +102,9 @@ export function useChat(tabSessionId: string | null = null) {
     }
 
     if (msg.type === 'chat:history') {
-      setMessages(msg.messages);
+      if (!streamingRef.current) {
+        setMessages(msg.messages);
+      }
     }
 
     if (msg.type === 'chat:replay') {
@@ -107,8 +127,6 @@ export function useChat(tabSessionId: string | null = null) {
   }, [activeSessionId]);
 
   const { connected, send } = useWebSocket(handleMessage);
-
-  const historyLoaded = useRef<string | null>(null);
 
   useEffect(() => {
     if (connected && activeSessionId && historyLoaded.current !== activeSessionId && messages.length === 0) {

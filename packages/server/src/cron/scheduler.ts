@@ -30,7 +30,11 @@ export class CronScheduler {
 
   scheduleJob(job: CronJob): void {
     this.stopJob(job.id);
-    const task = cron.schedule(job.schedule, () => this.executeJob(job));
+    const jobId = job.id;
+    const task = cron.schedule(job.schedule, () => {
+      const current = this.repo.getById(jobId);
+      if (current && current.enabled) this.executeJob(current);
+    });
     this.tasks.set(job.id, task);
   }
 

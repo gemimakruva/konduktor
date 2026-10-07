@@ -40,15 +40,17 @@ export function AnalyticsPage() {
   const [models, setModels] = useState<ModelData[]>([]);
 
   const refresh = useCallback(async () => {
-    const qs = period ? `?period=${period}` : '';
-    const [s, d, m] = await Promise.all([
-      fetch(`/api/analytics/summary${qs}`).then(r => r.json()),
-      fetch(`/api/analytics/daily${qs}`).then(r => r.json()),
-      fetch(`/api/analytics/models${qs}`).then(r => r.json()),
-    ]);
-    setSummary(s);
-    setDaily(d);
-    setModels(m);
+    try {
+      const qs = period ? `?period=${period}` : '';
+      const [s, d, m] = await Promise.all([
+        fetch(`/api/analytics/summary${qs}`).then(r => r.ok ? r.json() : null),
+        fetch(`/api/analytics/daily${qs}`).then(r => r.ok ? r.json() : []),
+        fetch(`/api/analytics/models${qs}`).then(r => r.ok ? r.json() : []),
+      ]);
+      if (s) setSummary(s);
+      setDaily(d);
+      setModels(m);
+    } catch { /* network error */ }
   }, [period]);
 
   useEffect(() => { refresh(); }, [refresh]);

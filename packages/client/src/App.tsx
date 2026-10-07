@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ChatPanel } from './components/chat/ChatPanel';
 import { SessionsPage } from './components/sessions/SessionsPage';
@@ -29,6 +29,7 @@ export function App() {
         <Route path="/artifacts" element={<ArtifactsPage />} />
         <Route path="/profiles" element={<ProfilesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
   );

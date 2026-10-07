@@ -12,7 +12,7 @@ export function SettingsPage() {
   const [shutdownState, setShutdownState] = useState<'idle' | 'confirm' | 'done'>('idle');
 
   useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then(setSettings);
+    fetch('/api/settings').then(r => r.ok ? r.json() : null).then(s => { if (s) setSettings(s); }).catch(() => {});
   }, []);
 
   const update = async (patch: Partial<Settings>) => {

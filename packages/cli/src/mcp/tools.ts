@@ -1,4 +1,5 @@
-const BASE = 'http://127.0.0.1:4170';
+const PORT = process.env.KONDUKTOR_PORT || '4170';
+const BASE = `http://127.0.0.1:${PORT}`;
 
 async function callApi(path: string, method = 'GET', body?: unknown): Promise<unknown> {
   const opts: RequestInit = { method, headers: { 'Content-Type': 'application/json' } };

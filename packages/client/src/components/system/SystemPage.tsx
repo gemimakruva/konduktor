@@ -19,7 +19,7 @@ export function SystemPage() {
   const [info, setInfo] = useState<SystemInfo | null>(null);
 
   useEffect(() => {
-    const load = () => fetch('/api/system').then(r => r.json()).then(setInfo);
+    const load = () => fetch('/api/system').then(r => r.ok ? r.json() : null).then(d => { if (d) setInfo(d); }).catch(() => {});
     load();
     const interval = setInterval(load, 10_000);
     return () => clearInterval(interval);

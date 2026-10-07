@@ -144,12 +144,16 @@ export class ClaudeProcess extends EventEmitter {
   kill(): void {
     if (this.timer) clearTimeout(this.timer);
     if (this.child && !this.child.killed) {
-      this.child.kill('SIGTERM');
-      setTimeout(() => {
-        if (this.child && !this.child.killed) {
-          this.child.kill('SIGKILL');
-        }
-      }, 5000);
+      if (process.platform === 'win32' && this.child.pid) {
+        spawn('taskkill', ['/pid', String(this.child.pid), '/t', '/f'], { stdio: 'ignore' });
+      } else {
+        this.child.kill('SIGTERM');
+        setTimeout(() => {
+          if (this.child && !this.child.killed) {
+            this.child.kill('SIGKILL');
+          }
+        }, 5000);
+      }
     }
   }
 

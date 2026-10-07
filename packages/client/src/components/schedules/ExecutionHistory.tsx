@@ -15,7 +15,7 @@ export function ExecutionHistory({ jobId, onClose }: { jobId: number; onClose: (
   const [executions, setExecutions] = useState<Execution[]>([]);
 
   useEffect(() => {
-    fetch(`/api/cron/${jobId}/executions`).then(r => r.json()).then(setExecutions);
+    fetch(`/api/cron/${jobId}/executions`).then(r => r.ok ? r.json() : []).then(setExecutions).catch(() => {});
   }, [jobId]);
 
   const statusColor = (s: string) => s === 'completed' ? 'var(--green)' : s === 'failed' ? 'var(--red)' : 'var(--amber)';

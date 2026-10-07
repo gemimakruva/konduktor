@@ -17,17 +17,20 @@ export function KanbanPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
   const refresh = useCallback(async () => {
-    const res = await fetch('/api/kanban');
-    setTasks(await res.json());
+    try {
+      const res = await fetch('/api/kanban');
+      if (res.ok) setTasks(await res.json());
+    } catch { /* network error */ }
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   useEffect(() => {
-    fetch('/api/profiles').then(r => r.json()).then(setProfiles);
-    fetch('/api/kanban/assignments').then(r => r.json()).then(
-      (list: { taskId: number; agentId: number }[]) => setAssignments(list.map(a => ({ taskId: a.taskId, agentId: a.agentId }))),
-    );
+    fetch('/api/profiles').then(r => r.ok ? r.json() : []).then(setProfiles).catch(() => {});
+    fetch('/api/kanban/assignments')
+      .then(r => r.ok ? r.json() : [])
+      .then((list: { taskId: number; agentId: number }[]) => setAssignments(list.map(a => ({ taskId: a.taskId, agentId: a.agentId }))))
+      .catch(() => {});
   }, []);
 
   const addTask = async () => {

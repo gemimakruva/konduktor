@@ -9,8 +9,10 @@ export function ProfilesPage() {
   const [creating, setCreating] = useState(false);
 
   const refresh = useCallback(async () => {
-    const res = await fetch('/api/profiles');
-    setProfiles(await res.json());
+    try {
+      const res = await fetch('/api/profiles');
+      if (res.ok) setProfiles(await res.json());
+    } catch { /* network error */ }
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);

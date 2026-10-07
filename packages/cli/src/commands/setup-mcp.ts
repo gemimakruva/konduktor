@@ -1,4 +1,8 @@
 import { execSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function setupMcp() {
   try {
@@ -12,8 +16,10 @@ export async function setupMcp() {
     process.exit(1);
   }
 
+  const cliEntry = join(__dirname, '..', 'index.js');
+
   try {
-    execSync('claude mcp add konduktor -- konduktor mcp-serve', {
+    execSync(`claude mcp add konduktor -- node ${cliEntry} mcp-serve`, {
       encoding: 'utf-8',
       stdio: 'inherit',
     });
