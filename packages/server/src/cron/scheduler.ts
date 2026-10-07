@@ -12,6 +12,7 @@ export class CronScheduler {
   private runningJobs = new Set<number>();
   private repo: CronRepository;
   private db: Database.Database;
+  private completionCallback?: (msg: { jobName: string; status: string; executionId: number }) => void;
 
   constructor(db: Database.Database) {
     this.db = db;
@@ -55,6 +56,10 @@ export class CronScheduler {
     return true;
   }
 
+  onComplete(cb: (msg: { jobName: string; status: string; executionId: number }) => void): void {
+    this.completionCallback = cb;
+  }
+
   static validate(expression: string): boolean {
     return cron.validate(expression);
   }
@@ -85,11 +90,13 @@ export class CronScheduler {
     proc.on('close', (code: number) => {
       const status = code === 0 ? 'completed' : 'failed';
       this.repo.finishExecution(execId, status, output);
+      this.completionCallback?.({ jobName: job.name, status, executionId: execId });
       this.runningJobs.delete(job.id);
     });
 
     proc.on('error', () => {
       this.repo.finishExecution(execId, 'failed', output || 'Process error');
+      this.completionCallback?.({ jobName: job.name, status: 'failed', executionId: execId });
       this.runningJobs.delete(job.id);
     });
 
