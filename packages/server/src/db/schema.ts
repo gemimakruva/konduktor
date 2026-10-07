@@ -131,4 +131,5 @@ export const MIGRATIONS = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_assignments_task ON agent_assignments(task_id)`,
   `CREATE INDEX IF NOT EXISTS idx_assignments_agent ON agent_assignments(agent_id)`,
+  `ALTER TABLE cron_jobs ADD COLUMN agent_id INTEGER`,
 ];

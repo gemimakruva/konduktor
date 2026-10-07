@@ -14,7 +14,11 @@ export function initDb(dbPath: string): Database.Database {
   db.pragma('foreign_keys = ON');
 
   for (const sql of MIGRATIONS) {
-    db.exec(sql);
+    try {
+      db.exec(sql);
+    } catch (err) {
+      if (!(err instanceof Error && err.message.includes('duplicate column'))) throw err;
+    }
   }
 
   instance = db;

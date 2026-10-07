@@ -12,7 +12,7 @@ export function createCronRouter(scheduler: CronScheduler): RouterType {
   });
 
   router.post('/', (req, res) => {
-    const { name, schedule, prompt, cwd, model } = req.body;
+    const { name, schedule, prompt, cwd, model, agentId } = req.body;
     if (!name || !schedule || !prompt) {
       res.status(400).json({ error: 'name, schedule, and prompt required' }); return;
     }
@@ -20,7 +20,7 @@ export function createCronRouter(scheduler: CronScheduler): RouterType {
       res.status(400).json({ error: 'Invalid cron schedule expression' }); return;
     }
     const repo = new CronRepository(getDb());
-    const job = repo.create({ name, schedule, prompt, cwd, model });
+    const job = repo.create({ name, schedule, prompt, cwd, model, agentId });
     scheduler.scheduleJob(job);
     res.json(job);
   });
