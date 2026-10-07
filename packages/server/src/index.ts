@@ -12,6 +12,7 @@ import { systemRouter } from './routes/system.js';
 import { logsRouter } from './routes/logs.js';
 import { kanbanRouter } from './routes/kanban.js';
 import { agentsRouter } from './routes/agents.js';
+import { analyticsRouter } from './routes/analytics.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
@@ -31,6 +32,7 @@ export function createApp(): Express {
   app.use('/api/logs', logsRouter);
   app.use('/api/kanban', kanbanRouter);
   app.use('/api/agents', agentsRouter);
+  app.use('/api/analytics', analyticsRouter);
 
   app.get('/api/health', (_req, res) => {
     const claude = detectClaude();
