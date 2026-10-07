@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { initDb, getDb } from '../../src/db/connection.js';
 import { AgentRepository } from '../../src/db/agent-repository.js';
+import { AssignmentRepository } from '../../src/db/assignment-repository.js';
 
 describe('AgentRepository', () => {
   let db: Database.Database;
@@ -69,5 +70,27 @@ describe('AgentRepository', () => {
     const p = repo.create({ name: 'Delete Me' });
     repo.delete(p.id);
     expect(repo.getById(p.id)).toBeUndefined();
+  });
+
+  it('computes performance stats', () => {
+    const agent = repo.create({ name: 'Worker' });
+    const aRepo = new AssignmentRepository(db);
+    const a1 = aRepo.create({ taskId: 1, agentId: agent.id });
+    aRepo.updateStatus(a1.id, 'running');
+    aRepo.updateStatus(a1.id, 'completed', 'ok');
+    const a2 = aRepo.create({ taskId: 2, agentId: agent.id });
+    aRepo.updateStatus(a2.id, 'running');
+    aRepo.updateStatus(a2.id, 'failed', 'error');
+    const stats = repo.getStats(agent.id);
+    expect(stats.tasksCompleted).toBe(1);
+    expect(stats.tasksFailed).toBe(1);
+    expect(stats.successRate).toBeCloseTo(0.5);
+  });
+
+  it('returns zero stats for agent with no assignments', () => {
+    const agent = repo.create({ name: 'Idle' });
+    const stats = repo.getStats(agent.id);
+    expect(stats.tasksCompleted).toBe(0);
+    expect(stats.successRate).toBe(0);
   });
 });

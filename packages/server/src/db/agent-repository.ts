@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import type { AgentProfile, AgentProfileCreate, AgentProfileUpdate } from '@konduktor/shared';
+import type { AgentProfile, AgentProfileCreate, AgentProfileUpdate, AgentPerformanceStats } from '@konduktor/shared';
 
 const PROFILE_DEFAULTS: Omit<AgentProfileCreate, 'name'> = {
   icon: '🤖',
@@ -82,6 +82,23 @@ export class AgentRepository {
 
   delete(id: number): void {
     this.db.prepare(`DELETE FROM agent_profiles WHERE id = ?`).run(id);
+  }
+
+  getStats(agentId: number): AgentPerformanceStats {
+    const row = this.db.prepare(`
+      SELECT
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed,
+        AVG(CASE WHEN duration_ms IS NOT NULL THEN duration_ms END) as avg_dur
+      FROM agent_assignments WHERE agent_id = ?
+    `).get(agentId) as { completed: number; failed: number; avg_dur: number | null };
+    const total = row.completed + row.failed;
+    return {
+      tasksCompleted: row.completed,
+      tasksFailed: row.failed,
+      avgDurationMs: row.avg_dur || 0,
+      successRate: total > 0 ? row.completed / total : 0,
+    };
   }
 
   private mapRow(r: Record<string, unknown>): AgentProfile {
