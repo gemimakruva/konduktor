@@ -10,8 +10,8 @@
 | 2 | Orchestration | Done |
 | 3 | Automation & Analytics | Done |
 | 4 | Advanced Features | Done |
-| **5** | **Agent Profiles + Kanban Auto-Assign** | **Next** |
-| 6 | Chat Auto-Configuration (MCP Self-Service) | Planned |
+| 5 | Agent Profiles + Kanban Auto-Assign | Done |
+| **6** | **Chat Auto-Configuration (MCP Self-Service)** | **Next** |
 | 7 | Networking + Distribution + Community | Planned |
 
 ### Dependency Chain
