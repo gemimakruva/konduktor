@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/system', label: 'System', icon: '?' },
   { to: '/kanban', label: 'Kanban', icon: '=' },
   { to: '/analytics', label: 'Analytics', icon: '%' },
+  { to: '/schedules', label: 'Schedules', icon: '^' },
   { to: '/settings', label: 'Settings', icon: '*' },
 ];
 
