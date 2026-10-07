@@ -61,4 +61,29 @@ export const MIGRATIONS = [
     updated_at INTEGER DEFAULT (unixepoch())
   )`,
   `CREATE INDEX IF NOT EXISTS idx_kanban_column ON kanban_tasks(column_name)`,
+  `CREATE TABLE IF NOT EXISTS cron_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    schedule TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    cwd TEXT,
+    model TEXT,
+    enabled INTEGER DEFAULT 1,
+    created_at INTEGER DEFAULT (unixepoch()),
+    updated_at INTEGER DEFAULT (unixepoch())
+  )`,
+  `CREATE TABLE IF NOT EXISTS cron_executions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER NOT NULL REFERENCES cron_jobs(id) ON DELETE CASCADE,
+    session_id TEXT,
+    status TEXT NOT NULL DEFAULT 'running',
+    output TEXT DEFAULT '',
+    started_at INTEGER DEFAULT (unixepoch()),
+    finished_at INTEGER,
+    cost_usd REAL DEFAULT 0,
+    input_tokens INTEGER DEFAULT 0,
+    output_tokens INTEGER DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_cron_exec_job ON cron_executions(job_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_cron_exec_started ON cron_executions(started_at)`,
 ];
