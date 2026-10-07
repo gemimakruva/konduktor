@@ -25,6 +25,7 @@ export function SettingsPage() {
       document.documentElement.setAttribute('data-theme',
         patch.theme === 'system' ? '' : patch.theme);
     }
+    window.dispatchEvent(new CustomEvent('settings-changed'));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

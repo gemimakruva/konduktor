@@ -7,10 +7,15 @@ export function useNotifications() {
   );
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then(r => r.json())
-      .then(s => setEnabled(!!s.desktopNotifications))
-      .catch(() => {});
+    const fetchEnabled = () =>
+      fetch('/api/settings')
+        .then(r => r.json())
+        .then(s => setEnabled(!!s.desktopNotifications))
+        .catch(() => {});
+    fetchEnabled();
+    const handler = () => fetchEnabled();
+    window.addEventListener('settings-changed', handler);
+    return () => window.removeEventListener('settings-changed', handler);
   }, []);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
