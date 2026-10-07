@@ -13,10 +13,12 @@ export function detectClaude(): ClaudeCodeInfo {
 
     let authenticated = false;
     try {
-      const authCheck = execSync('claude auth status', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
-      authenticated = authCheck.includes('authenticated') || authCheck.includes('logged in');
-    } catch {
-      authenticated = false;
+      execSync('claude auth status', { stdio: ['pipe', 'pipe', 'pipe'] });
+      authenticated = true;
+    } catch (err) {
+      const output = [(err as { stdout?: Buffer })?.stdout, (err as { stderr?: Buffer })?.stderr]
+        .map(b => b?.toString().toLowerCase() || '').join(' ');
+      authenticated = /authenticat|logged.in|signed.in|active/.test(output);
     }
 
     return { installed: true, version, path, authenticated };
