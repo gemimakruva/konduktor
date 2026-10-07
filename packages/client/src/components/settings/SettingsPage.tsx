@@ -8,6 +8,7 @@ export function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const { permission, requestPermission } = useNotifications();
   const [notifError, setNotifError] = useState('');
+  const [shutdownState, setShutdownState] = useState<'idle' | 'confirm' | 'done'>('idle');
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(setSettings);
@@ -91,8 +92,45 @@ export function SettingsPage() {
 
       {saved && <p style={{ color: 'var(--green)', fontSize: '0.8rem', fontWeight: 500 }}>Settings saved</p>}
 
+      <section style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px', color: 'var(--fg2)' }}>Server</label>
+        {shutdownState === 'idle' && (
+          <button onClick={() => setShutdownState('confirm')} style={{
+            padding: '8px 16px', border: '1px solid var(--red, #e55)', borderRadius: 'var(--radius-md)',
+            background: 'transparent', color: 'var(--red, #e55)', fontSize: '0.8rem', cursor: 'pointer',
+          }}>
+            Shutdown Server
+          </button>
+        )}
+        {shutdownState === 'confirm' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--fg2)' }}>Are you sure?</span>
+            <button onClick={async () => {
+              await fetch('/api/shutdown', { method: 'POST' });
+              setShutdownState('done');
+            }} style={{
+              padding: '6px 14px', border: 'none', borderRadius: 'var(--radius-md)',
+              background: 'var(--red, #e55)', color: '#fff', fontSize: '0.8rem', cursor: 'pointer',
+            }}>
+              Yes, shutdown
+            </button>
+            <button onClick={() => setShutdownState('idle')} style={{
+              padding: '6px 14px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+              background: 'transparent', color: 'var(--fg2)', fontSize: '0.8rem', cursor: 'pointer',
+            }}>
+              Cancel
+            </button>
+          </div>
+        )}
+        {shutdownState === 'done' && (
+          <p style={{ fontSize: '0.8rem', color: 'var(--fg3)' }}>
+            Server stopped. Close this tab or restart with <code>konduktor start</code>.
+          </p>
+        )}
+      </section>
+
       <div style={{
-        marginTop: '32px', padding: '12px 16px',
+        marginTop: '24px', padding: '12px 16px',
         borderRadius: 'var(--radius-md)', background: 'var(--bg-raised)',
         fontSize: '0.75rem', color: 'var(--fg3)',
       }}>

@@ -53,6 +53,11 @@ export function createApp(scheduler?: CronScheduler): Express {
     res.json({ status: 'ok', version: '0.1.0', claude });
   });
 
+  app.post('/api/shutdown', (_req, res) => {
+    res.json({ status: 'shutting down' });
+    setTimeout(() => process.exit(0), 500);
+  });
+
   const clientDist = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'client', 'dist');
   if (existsSync(clientDist)) {
     app.use(express.static(clientDist));
