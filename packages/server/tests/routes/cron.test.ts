@@ -11,7 +11,7 @@ let createdId: number;
 beforeAll(async () => {
   initDb(':memory:');
   const scheduler = new CronScheduler(getDb());
-  const app = createApp(scheduler);
+  const app = createApp({ scheduler });
   server = createServer(app);
   await new Promise<void>(resolve => {
     server.listen(0, () => {
