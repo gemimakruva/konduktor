@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface ChatTab {
   id: string;
@@ -7,11 +7,28 @@ export interface ChatTab {
   createdAt: number;
 }
 
+const STORAGE_KEY = 'konduktor-chat-tabs';
+
+function loadPersistedTabs(): { tabs: ChatTab[]; activeTabId: string } {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.tabs?.length > 0) return data;
+    }
+  } catch { /* ignore */ }
+  const tab: ChatTab = { id: crypto.randomUUID(), label: 'Chat 1', sessionId: null, createdAt: Date.now() };
+  return { tabs: [tab], activeTabId: tab.id };
+}
+
 export function useChatTabs() {
-  const [tabs, setTabs] = useState<ChatTab[]>([
-    { id: crypto.randomUUID(), label: 'Chat 1', sessionId: null, createdAt: Date.now() },
-  ]);
-  const [activeTabId, setActiveTabId] = useState(tabs[0].id);
+  const [initial] = useState(loadPersistedTabs);
+  const [tabs, setTabs] = useState<ChatTab[]>(initial.tabs);
+  const [activeTabId, setActiveTabId] = useState(initial.activeTabId);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ tabs, activeTabId })); } catch { /* ignore */ }
+  }, [tabs, activeTabId]);
 
   const addTab = useCallback(() => {
     setTabs(prev => {

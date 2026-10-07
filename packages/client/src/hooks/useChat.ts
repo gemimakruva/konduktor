@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ChatMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
 import { useWebSocket } from './useWebSocket';
 
@@ -107,6 +107,15 @@ export function useChat(tabSessionId: string | null = null) {
   }, [activeSessionId]);
 
   const { connected, send } = useWebSocket(handleMessage);
+
+  const historyLoaded = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (connected && activeSessionId && historyLoaded.current !== activeSessionId && messages.length === 0) {
+      historyLoaded.current = activeSessionId;
+      send({ type: 'chat:history', sessionId: activeSessionId });
+    }
+  }, [connected, activeSessionId, messages.length, send]);
 
   const sendMessage = useCallback((prompt: string) => {
     setMessages(prev => [...prev, {

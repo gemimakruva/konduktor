@@ -8,9 +8,9 @@ import { MessageInput } from './MessageInput';
 import { ArtifactToast } from './ArtifactToast';
 
 export function ChatPanel() {
-  const { tabs, activeTab, activeTabId, addTab, removeTab, switchTab } = useChatTabs();
+  const { tabs, activeTab, activeTabId, addTab, removeTab, switchTab, updateTabSession } = useChatTabs();
   const {
-    messages, isStreaming, connected, sendMessage, stopChat,
+    messages, isStreaming, connected, sendMessage, stopChat, activeSessionId,
     artifactToast, dismissArtifactToast,
     lastCompletedResult, setLastCompletedResult,
     cronCompletion, setCronCompletion,
@@ -30,6 +30,12 @@ export function ChatPanel() {
       setCronCompletion(null);
     }
   }, [cronCompletion, notify, setCronCompletion]);
+
+  useEffect(() => {
+    if (activeSessionId && activeTab.sessionId !== activeSessionId) {
+      updateTabSession(activeTabId, activeSessionId);
+    }
+  }, [activeSessionId, activeTab.sessionId, activeTabId, updateTabSession]);
 
   return (
     <div style={{
