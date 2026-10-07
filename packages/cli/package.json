@@ -10,7 +10,9 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
-    "@konduktor/shared": "workspace:*"
+    "@konduktor/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

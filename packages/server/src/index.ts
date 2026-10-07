@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
+import { PATHS } from '@konduktor/shared';
 import { CONFIG } from './config.js';
 import { sessionsRouter } from './routes/sessions.js';
 import { settingsRouter } from './routes/settings.js';
@@ -20,13 +21,20 @@ import { artifactsRouter } from './routes/artifacts.js';
 import { createCronRouter } from './routes/cron.js';
 import { exportRouter } from './routes/export.js';
 import { agentProfilesRouter } from './routes/agent-profiles.js';
+import { createSecretsRouter } from './routes/secrets.js';
 import { CronScheduler } from './cron/scheduler.js';
+import { SecretsManager } from './secrets/secrets-manager.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
 import { initDb, getDb } from './db/connection.js';
 
-export function createApp(scheduler?: CronScheduler): Express {
+interface AppOptions {
+  scheduler?: CronScheduler;
+  secrets?: SecretsManager;
+}
+
+export function createApp(opts?: AppOptions): Express {
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -46,8 +54,11 @@ export function createApp(scheduler?: CronScheduler): Express {
   app.use('/api/export', exportRouter);
   app.use('/api/profiles', agentProfilesRouter);
 
-  if (scheduler) {
-    app.use('/api/cron', createCronRouter(scheduler));
+  if (opts?.scheduler) {
+    app.use('/api/cron', createCronRouter(opts.scheduler));
+  }
+  if (opts?.secrets) {
+    app.use('/api/secrets', createSecretsRouter(opts.secrets));
   }
 
   app.get('/api/health', (_req, res) => {
@@ -73,10 +84,14 @@ export function createApp(scheduler?: CronScheduler): Express {
 
 export function startServer() {
   initDb(CONFIG.dbPath);
-  const scheduler = new CronScheduler(getDb());
+  const secrets = new SecretsManager(
+    join(CONFIG.configDir, PATHS.secretsFile),
+    join(CONFIG.configDir, PATHS.keyFile),
+  );
+  const scheduler = new CronScheduler(getDb(), secrets);
   scheduler.startAll();
 
-  const app = createApp(scheduler);
+  const app = createApp({ scheduler, secrets });
   const server = createServer(app);
 
   const wss = new WebSocketServer({ server, path: '/ws' });

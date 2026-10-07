@@ -93,14 +93,14 @@ export class ClaudeProcess extends EventEmitter {
     this.sessionId = sessionId;
   }
 
-  start(prompt: string, opts: { cwd?: string; model?: string; resume?: string }): void {
+  start(prompt: string, opts: { cwd?: string; model?: string; resume?: string; env?: Record<string, string> }): void {
     const args = ['-p', prompt, '--output-format', 'stream-json', '--verbose'];
     if (opts.model) args.push('--model', opts.model);
     if (opts.resume) args.push('--resume', opts.resume);
 
     this.child = spawn(CONFIG.claudeBin, args, {
       cwd: opts.cwd || process.cwd(),
-      env: { ...process.env },
+      env: { ...process.env, ...opts.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 

@@ -4,10 +4,10 @@ import type { CronJob, CronExecution } from '@konduktor/shared';
 export class CronRepository {
   constructor(private db: Database.Database) {}
 
-  create(data: { name: string; schedule: string; prompt: string; cwd?: string; model?: string }): CronJob {
+  create(data: { name: string; schedule: string; prompt: string; cwd?: string; model?: string; agentId?: number }): CronJob {
     const result = this.db.prepare(
-      `INSERT INTO cron_jobs (name, schedule, prompt, cwd, model) VALUES (?, ?, ?, ?, ?)`
-    ).run(data.name, data.schedule, data.prompt, data.cwd || null, data.model || null);
+      `INSERT INTO cron_jobs (name, schedule, prompt, cwd, model, agent_id) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(data.name, data.schedule, data.prompt, data.cwd || null, data.model || null, data.agentId || null);
     return this.getById(result.lastInsertRowid as number)!;
   }
 
@@ -24,12 +24,17 @@ export class CronRepository {
     return row ? this.mapJob(row) : undefined;
   }
 
-  private static ALLOWED_UPDATE_COLS = new Set(['name', 'schedule', 'prompt', 'cwd', 'model']);
+  private static ALLOWED_UPDATE_COLS = new Set(['name', 'schedule', 'prompt', 'cwd', 'model', 'agent_id']);
 
-  update(id: number, patch: Partial<{ name: string; schedule: string; prompt: string; cwd: string | null; model: string | null }>): void {
+  update(id: number, patch: Partial<{ name: string; schedule: string; prompt: string; cwd: string | null; model: string | null; agentId: number | null }>): void {
     const sets: string[] = [];
     const vals: unknown[] = [];
-    for (const [key, val] of Object.entries(patch)) {
+    const mapped: Record<string, unknown> = { ...patch };
+    if ('agentId' in patch) {
+      mapped.agent_id = patch.agentId;
+      delete mapped.agentId;
+    }
+    for (const [key, val] of Object.entries(mapped)) {
       if (val !== undefined && CronRepository.ALLOWED_UPDATE_COLS.has(key)) {
         sets.push(`${key} = ?`); vals.push(val);
       }
@@ -76,6 +81,7 @@ export class CronRepository {
     return {
       id: r.id as number, name: r.name as string, schedule: r.schedule as string,
       prompt: r.prompt as string, cwd: r.cwd as string | null, model: r.model as string | null,
+      agentId: (r.agent_id as number) || null,
       enabled: (r.enabled as number) === 1,
       createdAt: (r.created_at as number) * 1000, updatedAt: (r.updated_at as number) * 1000,
     };

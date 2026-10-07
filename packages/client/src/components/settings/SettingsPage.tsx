@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Settings } from '@konduktor/shared';
 import { ThemeToggle } from './ThemeToggle';
+import { SecretsSection } from './SecretsSection';
 import { useNotifications } from '../../hooks/useNotifications';
 
 export function SettingsPage() {
@@ -89,6 +90,8 @@ export function SettingsPage() {
           </p>
         )}
       </section>
+
+      <SecretsSection />
 
       {saved && <p style={{ color: 'var(--green)', fontSize: '0.8rem', fontWeight: 500 }}>Settings saved</p>}
 

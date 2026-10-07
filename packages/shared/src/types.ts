@@ -142,6 +142,7 @@ export interface CronJob {
   prompt: string;
   cwd: string | null;
   model: string | null;
+  agentId: number | null;
   enabled: boolean;
   createdAt: number;
   updatedAt: number;
@@ -158,6 +159,12 @@ export interface CronExecution {
   costUsd: number;
   inputTokens: number;
   outputTokens: number;
+}
+
+export interface SecretMeta {
+  name: string;
+  scope: string;
+  createdAt: number;
 }
 
 export type WsClientMessage =

@@ -11,7 +11,7 @@ let createdId: number;
 beforeAll(async () => {
   initDb(':memory:');
   const scheduler = new CronScheduler(getDb());
-  const app = createApp(scheduler);
+  const app = createApp({ scheduler });
   server = createServer(app);
   await new Promise<void>(resolve => {
     server.listen(0, () => {
@@ -65,6 +65,21 @@ describe('Cron endpoints', () => {
     const res = await fetch(`http://localhost:${port}/api/cron/${createdId}/executions`);
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);
+  });
+
+  it('PUT /api/cron/:id rejects non-numeric agentId', async () => {
+    const create = await fetch(`http://localhost:${port}/api/cron`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'AgentId Test', schedule: '0 9 * * *', prompt: 'test' }),
+    });
+    const job = await create.json();
+    const res = await fetch(`http://localhost:${port}/api/cron/${job.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: 'not-a-number' }),
+    });
+    expect(res.status).toBe(400);
   });
 
   it('DELETE /api/cron/:id deletes job', async () => {
