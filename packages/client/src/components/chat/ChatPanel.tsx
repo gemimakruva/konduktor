@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useChat } from '../../hooks/useChat';
+import { useNotifications } from '../../hooks/useNotifications';
 import { useChatTabs } from '../../hooks/useChatTabs';
 import { TabBar } from './TabBar';
 import { MessageList } from './MessageList';
@@ -7,7 +9,27 @@ import { ArtifactToast } from './ArtifactToast';
 
 export function ChatPanel() {
   const { tabs, activeTab, activeTabId, addTab, removeTab, switchTab } = useChatTabs();
-  const { messages, isStreaming, connected, sendMessage, stopChat, artifactToast, dismissArtifactToast } = useChat(activeTab.sessionId);
+  const {
+    messages, isStreaming, connected, sendMessage, stopChat,
+    artifactToast, dismissArtifactToast,
+    lastCompletedResult, setLastCompletedResult,
+    cronCompletion, setCronCompletion,
+  } = useChat(activeTab.sessionId);
+  const { notify } = useNotifications();
+
+  useEffect(() => {
+    if (lastCompletedResult) {
+      notify('Session completed', lastCompletedResult);
+      setLastCompletedResult(null);
+    }
+  }, [lastCompletedResult, notify, setLastCompletedResult]);
+
+  useEffect(() => {
+    if (cronCompletion) {
+      notify('Cron job completed', `${cronCompletion.jobName} — ${cronCompletion.status}`);
+      setCronCompletion(null);
+    }
+  }, [cronCompletion, notify, setCronCompletion]);
 
   return (
     <div style={{

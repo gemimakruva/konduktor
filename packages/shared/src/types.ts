@@ -6,6 +6,7 @@ export interface ChatMessage {
   model?: string;
   usage?: TokenUsage;
   isStreaming?: boolean;
+  blocks?: ContentBlock[];
 }
 
 export interface TokenUsage {
@@ -94,6 +95,7 @@ export interface Settings {
   defaultEffort: 'low' | 'medium' | 'high';
   lanAccess: boolean;
   pinCode?: string;
+  desktopNotifications: boolean;
 }
 
 export interface AnalyticsRecord {
@@ -190,4 +192,5 @@ export type WsServerMessage =
   | { type: 'rate_limit'; sessionId: string; retryAfterMs: number }
   | { type: 'sessions:update'; sessions: Session[] }
   | { type: 'artifact:saved'; artifact: Artifact }
+  | { type: 'cron:completed'; jobName: string; status: 'completed' | 'failed'; executionId: number }
   | { type: 'error'; message: string };

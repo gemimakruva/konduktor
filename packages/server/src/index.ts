@@ -63,6 +63,18 @@ export function startServer() {
   const wss = new WebSocketServer({ server, path: '/ws' });
   wss.on('connection', createWsHandler());
 
+  scheduler.onComplete((msg) => {
+    const payload = JSON.stringify({
+      type: 'cron:completed',
+      jobName: msg.jobName,
+      status: msg.status,
+      executionId: msg.executionId,
+    });
+    for (const client of wss.clients) {
+      if (client.readyState === 1) client.send(payload);
+    }
+  });
+
   const host = CONFIG.lanAccess ? '0.0.0.0' : '127.0.0.1';
   server.listen(CONFIG.port, host, () => {
     console.log(`Konduktor running at http://${host}:${CONFIG.port}`);

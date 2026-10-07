@@ -7,6 +7,7 @@ export const DEFAULTS: Settings = {
   defaultModel: 'claude-sonnet-5-5',
   defaultEffort: 'high',
   lanAccess: false,
+  desktopNotifications: false,
 };
 
 export const LIMITS = {

@@ -14,6 +14,8 @@ export function useChat(tabSessionId: string | null = null) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(tabSessionId);
   const [artifactToast, setArtifactToast] = useState<ArtifactToastData | null>(null);
+  const [lastCompletedResult, setLastCompletedResult] = useState<string | null>(null);
+  const [cronCompletion, setCronCompletion] = useState<{ jobName: string; status: string } | null>(null);
 
   const handleMessage = useCallback((msg: WsServerMessage) => {
     if (msg.type === 'artifact:saved') {
@@ -29,21 +31,26 @@ export function useChat(tabSessionId: string | null = null) {
       const event = msg.event as StreamEvent;
 
       if (event.type === 'assistant' && event.content) {
-        const text = event.content
+        const textContent = event.content
           .filter(b => b.type === 'text' && b.text)
-          .map(b => b.text)
+          .map(b => b.text!)
           .join('');
-        if (!text) return;
+        const blocks = event.content;
 
         setMessages(prev => {
           const last = prev[prev.length - 1];
           if (last?.role === 'assistant' && last.isStreaming) {
-            return [...prev.slice(0, -1), { ...last, content: last.content + text }];
+            return [...prev.slice(0, -1), {
+              ...last,
+              content: last.content + textContent,
+              blocks: [...(last.blocks || []), ...blocks],
+            }];
           }
           return [...prev, {
             id: crypto.randomUUID(),
             role: 'assistant' as const,
-            content: text,
+            content: textContent,
+            blocks: [...blocks],
             timestamp: Date.now(),
             isStreaming: true,
           }];
@@ -53,9 +60,17 @@ export function useChat(tabSessionId: string | null = null) {
 
     if (msg.type === 'chat:end') {
       setIsStreaming(false);
-      setMessages(prev => prev.map(m =>
-        m.isStreaming ? { ...m, isStreaming: false } : m
-      ));
+      setMessages(prev => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === 'assistant') {
+          setLastCompletedResult(lastMsg.content.slice(0, 80));
+        }
+        return prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m);
+      });
+    }
+
+    if (msg.type === 'cron:completed') {
+      setCronCompletion({ jobName: msg.jobName, status: msg.status });
     }
 
     if (msg.type === 'chat:error') {
@@ -77,16 +92,15 @@ export function useChat(tabSessionId: string | null = null) {
         if (event.type === 'assistant' && event.content) {
           const text = event.content
             .filter(b => b.type === 'text' && b.text)
-            .map(b => b.text)
+            .map(b => b.text!)
             .join('');
-          if (text) {
-            setMessages(prev => [...prev, {
-              id: crypto.randomUUID(),
-              role: 'assistant' as const,
-              content: text,
-              timestamp: Date.now(),
-            }]);
-          }
+          setMessages(prev => [...prev, {
+            id: crypto.randomUUID(),
+            role: 'assistant' as const,
+            content: text,
+            blocks: [...event.content!],
+            timestamp: Date.now(),
+          }]);
         }
       }
     }
@@ -117,5 +131,10 @@ export function useChat(tabSessionId: string | null = null) {
 
   const dismissArtifactToast = useCallback(() => setArtifactToast(null), []);
 
-  return { messages, isStreaming, connected, sendMessage, stopChat, activeSessionId, artifactToast, dismissArtifactToast };
+  return {
+    messages, isStreaming, connected, sendMessage, stopChat, activeSessionId,
+    artifactToast, dismissArtifactToast,
+    lastCompletedResult, setLastCompletedResult,
+    cronCompletion, setCronCompletion,
+  };
 }
