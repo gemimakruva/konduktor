@@ -102,6 +102,7 @@ export class ClaudeProcess extends EventEmitter {
       cwd: opts.cwd || process.cwd(),
       env: { ...process.env, ...opts.env },
       stdio: ['pipe', 'pipe', 'pipe'],
+      shell: process.platform === 'win32',
     });
 
     this.child.stdout!.on('data', (chunk: Buffer) => {
