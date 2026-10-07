@@ -10,4 +10,13 @@ export default defineConfig({
       '/ws': { target: 'ws://localhost:4170', ws: true },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          recharts: ['recharts'],
+        },
+      },
+    },
+  },
 });

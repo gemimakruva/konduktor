@@ -16,7 +16,7 @@ beforeAll(async () => {
   });
 });
 
-afterAll(() => server.close());
+afterAll(() => new Promise<void>(resolve => server.close(() => resolve())));
 
 describe('Agents endpoint', () => {
   it('GET /api/agents returns array', async () => {

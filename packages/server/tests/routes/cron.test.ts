@@ -21,7 +21,7 @@ beforeAll(async () => {
   });
 });
 
-afterAll(() => server.close());
+afterAll(() => new Promise<void>(resolve => server.close(() => resolve())));
 
 describe('Cron endpoints', () => {
   it('POST /api/cron creates a job', async () => {

@@ -28,7 +28,7 @@ afterAll(async () => {
     headers: { 'Content-Type': 'application/json', 'X-Pin-Code': '1234' },
     body: JSON.stringify({ lanAccess: false, pinCode: '' }),
   });
-  server.close();
+  await new Promise<void>(resolve => server.close(() => resolve()));
 });
 
 describe('PIN code authentication', () => {
