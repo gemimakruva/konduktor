@@ -13,11 +13,14 @@ import { logsRouter } from './routes/logs.js';
 import { kanbanRouter } from './routes/kanban.js';
 import { agentsRouter } from './routes/agents.js';
 import { analyticsRouter } from './routes/analytics.js';
+import { createCronRouter } from './routes/cron.js';
+import { CronScheduler } from './cron/scheduler.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
+import { getDb } from './db/connection.js';
 
-export function createApp(): Express {
+export function createApp(scheduler?: CronScheduler): Express {
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -34,6 +37,10 @@ export function createApp(): Express {
   app.use('/api/agents', agentsRouter);
   app.use('/api/analytics', analyticsRouter);
 
+  if (scheduler) {
+    app.use('/api/cron', createCronRouter(scheduler));
+  }
+
   app.get('/api/health', (_req, res) => {
     const claude = detectClaude();
     res.json({ status: 'ok', version: '0.1.0', claude });
@@ -43,7 +50,10 @@ export function createApp(): Express {
 }
 
 export function startServer() {
-  const app = createApp();
+  const scheduler = new CronScheduler(getDb());
+  scheduler.startAll();
+
+  const app = createApp(scheduler);
   const server = createServer(app);
 
   const wss = new WebSocketServer({ server, path: '/ws' });
