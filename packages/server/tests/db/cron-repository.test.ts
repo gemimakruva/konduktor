@@ -52,6 +52,16 @@ describe('CronRepository', () => {
     expect(execs[0].costUsd).toBe(0.02);
   });
 
+  it('update ignores unknown columns', () => {
+    const job = repo.create({ name: 'Safe', schedule: '0 9 * * *', prompt: 'test' });
+    repo.update(job.id, { name: 'Updated' } as never);
+    expect(repo.getById(job.id)!.name).toBe('Updated');
+    // Injected key should be silently ignored
+    repo.update(job.id, { 'name; DROP TABLE cron_jobs--': 'evil' } as never);
+    expect(repo.getById(job.id)!.name).toBe('Updated');
+    repo.delete(job.id);
+  });
+
   it('deletes job and cascades executions', () => {
     repo.delete(jobId);
     expect(repo.list()).toHaveLength(0);

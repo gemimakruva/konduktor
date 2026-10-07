@@ -24,11 +24,15 @@ export class CronRepository {
     return row ? this.mapJob(row) : undefined;
   }
 
+  private static ALLOWED_UPDATE_COLS = new Set(['name', 'schedule', 'prompt', 'cwd', 'model']);
+
   update(id: number, patch: Partial<{ name: string; schedule: string; prompt: string; cwd: string | null; model: string | null }>): void {
     const sets: string[] = [];
     const vals: unknown[] = [];
     for (const [key, val] of Object.entries(patch)) {
-      if (val !== undefined) { sets.push(`${key} = ?`); vals.push(val); }
+      if (val !== undefined && CronRepository.ALLOWED_UPDATE_COLS.has(key)) {
+        sets.push(`${key} = ?`); vals.push(val);
+      }
     }
     if (sets.length === 0) return;
     sets.push('updated_at = unixepoch()');

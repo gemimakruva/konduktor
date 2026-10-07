@@ -49,6 +49,12 @@ export class CronScheduler {
     return this.runningJobs.has(id);
   }
 
+  runNow(job: CronJob): boolean {
+    if (this.runningJobs.has(job.id)) return false;
+    this.executeJob(job);
+    return true;
+  }
+
   static validate(expression: string): boolean {
     return cron.validate(expression);
   }

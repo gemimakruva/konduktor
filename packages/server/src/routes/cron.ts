@@ -75,6 +75,7 @@ export function createCronRouter(scheduler: CronScheduler): RouterType {
     const job = repo.getById(id);
     if (!job) { res.status(404).json({ error: 'Job not found' }); return; }
     if (scheduler.isRunning(id)) { res.status(409).json({ error: 'Job already running' }); return; }
+    scheduler.runNow(job);
     res.json({ triggered: true });
   });
 

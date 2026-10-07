@@ -84,6 +84,16 @@ describe('CronScheduler', () => {
     expect(scheduler.isRunning(job.id)).toBe(false);
   });
 
+  it('runNow triggers job execution', () => {
+    const repo = new CronRepository(db);
+    const job = repo.create({ name: 'Manual', schedule: '0 9 * * *', prompt: 'run now' });
+
+    const scheduler = new CronScheduler(db);
+    const result = scheduler.runNow(job);
+    expect(result).toBe(true);
+    scheduler.stopAll();
+  });
+
   it('validates cron expressions', () => {
     expect(CronScheduler.validate('* * * * *')).toBe(true);
   });
