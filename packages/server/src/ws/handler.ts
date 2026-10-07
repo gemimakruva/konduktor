@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { ClaudeProcess } from '../claude/cli.js';
 import { SessionManager } from '../claude/sessions.js';
 import { ChatRepository } from '../db/chat-repository.js';
+import { AnalyticsRepository } from '../db/analytics-repository.js';
 import { StreamBuffer } from './stream-buffer.js';
 import { getDb } from '../db/connection.js';
 import { CONFIG } from '../config.js';
@@ -59,6 +60,14 @@ function startProcess(
     }
     const idx = buffer.push(event);
     send(ws, { type: 'chat:stream', sessionId, event, eventIndex: idx });
+
+    if (event.type === 'result' && event.usage) {
+      try {
+        new AnalyticsRepository(getDb()).record(
+          sessionId, event.model || 'unknown', event.usage, event.durationMs || 0
+        );
+      } catch { /* analytics write failure is non-fatal */ }
+    }
   });
 
   proc.on('close', () => {
