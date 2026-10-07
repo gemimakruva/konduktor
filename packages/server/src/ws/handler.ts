@@ -24,13 +24,21 @@ function send(ws: WebSocket, msg: WsServerMessage): void {
   }
 }
 
-function loadMaxConcurrent(): number {
+function loadSettings(): Record<string, unknown> {
   try {
-    const raw = JSON.parse(readFileSync(CONFIG.settingsPath, 'utf-8'));
-    const val = raw.maxConcurrentSessions;
-    if (typeof val === 'number' && val >= 1 && val <= LIMITS.maxConcurrentSessions) return val;
-  } catch { /* use default */ }
+    return JSON.parse(readFileSync(CONFIG.settingsPath, 'utf-8'));
+  } catch { return {}; }
+}
+
+function loadMaxConcurrent(): number {
+  const val = loadSettings().maxConcurrentSessions;
+  if (typeof val === 'number' && val >= 1 && val <= LIMITS.maxConcurrentSessions) return val;
   return DEFAULTS.maxConcurrentSessions;
+}
+
+function loadDefaultModel(): string | undefined {
+  const val = loadSettings().defaultModel;
+  return typeof val === 'string' && val.length > 0 ? val : undefined;
 }
 
 function getChatRepo(): ChatRepository {
@@ -132,7 +140,7 @@ export function createWsHandler() {
         } catch { /* DB write failure is non-fatal */ }
 
         startProcess(ws, sessionId, msg.prompt, connectionProcesses, {
-          cwd: msg.cwd, model: msg.model,
+          cwd: msg.cwd, model: msg.model || loadDefaultModel(),
         });
       }
 
@@ -148,7 +156,7 @@ export function createWsHandler() {
         } catch { /* DB write failure is non-fatal */ }
 
         startProcess(ws, msg.sessionId, msg.prompt, connectionProcesses, {
-          cwd: msg.cwd, model: msg.model, resume: msg.sessionId,
+          cwd: msg.cwd, model: msg.model || loadDefaultModel(), resume: msg.sessionId,
         });
       }
 

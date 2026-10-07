@@ -44,6 +44,26 @@ export function SettingsPage() {
       </section>
 
       <section style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px', color: 'var(--fg2)' }}>Default model</label>
+        <select value={settings.defaultModel || ''} onChange={e => update({ defaultModel: e.target.value })}
+          style={{
+            padding: '8px 12px', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)', background: 'var(--bg)',
+            color: 'var(--fg)', fontSize: '0.8rem', minWidth: '220px',
+          }}>
+          <option value="">Claude Code default</option>
+          <option value="claude-sonnet-4-20250514">Sonnet 4</option>
+          <option value="claude-sonnet-5-5">Sonnet 5.5</option>
+          <option value="claude-opus-4-6">Opus 4.6</option>
+          <option value="claude-opus-5-5">Opus 5.5</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+        </select>
+        <p style={{ fontSize: '0.7rem', color: 'var(--fg3)', marginTop: '4px' }}>
+          Model used for chat sessions. Overrides Claude Code&apos;s own default.
+        </p>
+      </section>
+
+      <section style={{ marginBottom: '24px' }}>
         <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px', color: 'var(--fg2)' }}>Max concurrent sessions</label>
         <input type="number" min={1} max={10} value={settings.maxConcurrentSessions}
           onChange={e => update({ maxConcurrentSessions: Number(e.target.value) })}
