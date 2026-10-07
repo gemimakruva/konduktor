@@ -40,7 +40,30 @@ Konduktor is a web dashboard that wraps the official Claude Code CLI, giving you
 
 ## Screenshots
 
-*Coming soon — see [Getting Started](docs/getting-started.md) for a full feature walkthrough.*
+| Chat | Sessions | Kanban |
+|------|----------|--------|
+| ![Chat](docs/screenshots/01-chat.png) | ![Sessions](docs/screenshots/sessions.png) | ![Kanban](docs/screenshots/kanban.png) |
+
+| Agents | Analytics | Settings |
+|--------|-----------|----------|
+| ![Agents](docs/screenshots/agents.png) | ![Analytics](docs/screenshots/analytics.png) | ![Settings](docs/screenshots/settings.png) |
+
+<details>
+<summary>More screenshots</summary>
+
+| Capabilities | Schedules | Artifacts |
+|--------------|-----------|-----------|
+| ![Capabilities](docs/screenshots/capabilities.png) | ![Schedules](docs/screenshots/schedules.png) | ![Artifacts](docs/screenshots/artifacts.png) |
+
+| Search | Export | Logs |
+|--------|--------|------|
+| ![Search](docs/screenshots/search.png) | ![Export](docs/screenshots/export.png) | ![Logs](docs/screenshots/logs.png) |
+
+| System |
+|--------|
+| ![System](docs/screenshots/system.png) |
+
+</details>
 
 ## Quick Start
 
