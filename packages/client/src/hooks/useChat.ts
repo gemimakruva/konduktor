@@ -2,12 +2,26 @@ import { useState, useCallback } from 'react';
 import type { ChatMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
 import { useWebSocket } from './useWebSocket';
 
+export interface ArtifactToastData {
+  id: number;
+  title: string;
+  icon: string;
+  url: string | null;
+}
+
 export function useChat(tabSessionId: string | null = null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(tabSessionId);
+  const [artifactToast, setArtifactToast] = useState<ArtifactToastData | null>(null);
 
   const handleMessage = useCallback((msg: WsServerMessage) => {
+    if (msg.type === 'artifact:saved') {
+      const a = msg.artifact;
+      setArtifactToast({ id: a.id, title: a.title, icon: a.icon, url: a.url });
+      return;
+    }
+
     if (msg.type === 'chat:stream') {
       if (activeSessionId && msg.sessionId !== activeSessionId) return;
       setIsStreaming(true);
@@ -101,5 +115,7 @@ export function useChat(tabSessionId: string | null = null) {
     }
   }, [send, activeSessionId]);
 
-  return { messages, isStreaming, connected, sendMessage, stopChat, activeSessionId };
+  const dismissArtifactToast = useCallback(() => setArtifactToast(null), []);
+
+  return { messages, isStreaming, connected, sendMessage, stopChat, activeSessionId, artifactToast, dismissArtifactToast };
 }

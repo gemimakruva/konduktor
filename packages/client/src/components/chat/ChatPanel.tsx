@@ -3,10 +3,11 @@ import { useChatTabs } from '../../hooks/useChatTabs';
 import { TabBar } from './TabBar';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { ArtifactToast } from './ArtifactToast';
 
 export function ChatPanel() {
   const { tabs, activeTab, activeTabId, addTab, removeTab, switchTab } = useChatTabs();
-  const { messages, isStreaming, connected, sendMessage, stopChat } = useChat(activeTab.sessionId);
+  const { messages, isStreaming, connected, sendMessage, stopChat, artifactToast, dismissArtifactToast } = useChat(activeTab.sessionId);
 
   return (
     <div style={{
@@ -39,6 +40,7 @@ export function ChatPanel() {
         isStreaming={isStreaming}
         disabled={!connected}
       />
+      {artifactToast && <ArtifactToast toast={artifactToast} onDismiss={dismissArtifactToast} />}
     </div>
   );
 }

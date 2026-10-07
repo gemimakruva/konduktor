@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/kanban', label: 'Kanban', icon: '=' },
   { to: '/analytics', label: 'Analytics', icon: '%' },
   { to: '/schedules', label: 'Schedules', icon: '^' },
+  { to: '/artifacts', label: 'Artifacts', icon: '◆' },
   { to: '/settings', label: 'Settings', icon: '*' },
 ];
 

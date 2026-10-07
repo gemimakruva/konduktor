@@ -6,6 +6,8 @@ import { ClaudeProcess } from '../claude/cli.js';
 import { SessionManager } from '../claude/sessions.js';
 import { ChatRepository } from '../db/chat-repository.js';
 import { AnalyticsRepository } from '../db/analytics-repository.js';
+import { ArtifactRepository } from '../db/artifact-repository.js';
+import { extractArtifactFromEvent } from './artifact-detector.js';
 import { StreamBuffer } from './stream-buffer.js';
 import { getDb } from '../db/connection.js';
 import { CONFIG } from '../config.js';
@@ -60,6 +62,21 @@ function startProcess(
     }
     const idx = buffer.push(event);
     send(ws, { type: 'chat:stream', sessionId, event, eventIndex: idx });
+
+    const artifactInputs = extractArtifactFromEvent(event);
+    for (const input of artifactInputs) {
+      try {
+        const artifact = new ArtifactRepository(getDb()).create({
+          sessionId,
+          url: input.url,
+          title: input.title,
+          description: input.description,
+          icon: input.icon,
+          artifactType: input.artifactType,
+        });
+        send(ws, { type: 'artifact:saved', artifact });
+      } catch { /* artifact save failure is non-fatal */ }
+    }
 
     if (event.type === 'result' && event.usage) {
       try {

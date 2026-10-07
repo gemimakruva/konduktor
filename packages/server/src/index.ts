@@ -13,6 +13,7 @@ import { logsRouter } from './routes/logs.js';
 import { kanbanRouter } from './routes/kanban.js';
 import { agentsRouter } from './routes/agents.js';
 import { analyticsRouter } from './routes/analytics.js';
+import { artifactsRouter } from './routes/artifacts.js';
 import { createCronRouter } from './routes/cron.js';
 import { exportRouter } from './routes/export.js';
 import { CronScheduler } from './cron/scheduler.js';
@@ -37,6 +38,7 @@ export function createApp(scheduler?: CronScheduler): Express {
   app.use('/api/kanban', kanbanRouter);
   app.use('/api/agents', agentsRouter);
   app.use('/api/analytics', analyticsRouter);
+  app.use('/api/artifacts', artifactsRouter);
   app.use('/api/export', exportRouter);
 
   if (scheduler) {
