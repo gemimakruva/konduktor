@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@konduktor/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "commander": "^15.0.0"
   },
   "devDependencies": {
