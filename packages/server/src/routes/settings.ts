@@ -10,7 +10,7 @@ export const settingsRouter: RouterType = Router();
 const VALID_THEMES = ['light', 'dark', 'system'] as const;
 const SETTINGS_KEYS: (keyof Settings)[] = [
   'port', 'maxConcurrentSessions', 'theme', 'defaultModel',
-  'defaultEffort', 'lanAccess', 'pinCode',
+  'defaultEffort', 'lanAccess', 'pinCode', 'desktopNotifications',
 ];
 
 function loadSettings(): Settings {

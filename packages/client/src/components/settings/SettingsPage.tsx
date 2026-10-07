@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { Settings } from '@konduktor/shared';
 import { ThemeToggle } from './ThemeToggle';
+import { useNotifications } from '../../hooks/useNotifications';
 
 export function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saved, setSaved] = useState(false);
+  const { permission, requestPermission } = useNotifications();
+  const [notifError, setNotifError] = useState('');
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(setSettings);
@@ -55,6 +58,34 @@ export function SettingsPage() {
           <input type="checkbox" checked={settings.lanAccess} onChange={e => update({ lanAccess: e.target.checked })} />
           Allow access from other devices on network
         </label>
+      </section>
+
+      <section style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '8px', color: 'var(--fg2)' }}>Desktop notifications</label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+          <input type="checkbox" checked={settings.desktopNotifications}
+            onChange={async (e) => {
+              const want = e.target.checked;
+              if (want) {
+                const granted = await requestPermission();
+                if (!granted) {
+                  setNotifError('Permission denied by browser');
+                  setTimeout(() => setNotifError(''), 3000);
+                  return;
+                }
+              }
+              update({ desktopNotifications: want });
+            }} />
+          Notify when sessions or cron jobs complete
+        </label>
+        {notifError && (
+          <p style={{ color: 'var(--red)', fontSize: '0.75rem', marginTop: '4px' }}>{notifError}</p>
+        )}
+        {permission === 'denied' && (
+          <p style={{ color: 'var(--fg3)', fontSize: '0.7rem', marginTop: '4px' }}>
+            Notifications blocked. Enable in browser settings.
+          </p>
+        )}
       </section>
 
       {saved && <p style={{ color: 'var(--green)', fontSize: '0.8rem', fontWeight: 500 }}>Settings saved</p>}
