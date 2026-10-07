@@ -8,7 +8,7 @@ export class SessionManager {
       const args = includeAll ? ['agents', '--json', '--all'] : ['agents', '--json'];
       const output = execFileSync(CONFIG.claudeBin, args, {
         encoding: 'utf-8',
-        timeout: 10_000,
+        timeout: 3_000,
       });
       const raw = JSON.parse(output) as Record<string, unknown>[];
       return raw.map(r => ({
@@ -27,7 +27,7 @@ export class SessionManager {
 
   stop(sessionId: string): boolean {
     try {
-      execFileSync(CONFIG.claudeBin, ['stop', sessionId], { timeout: 10_000 });
+      execFileSync(CONFIG.claudeBin, ['stop', sessionId], { timeout: 3_000 });
       return true;
     } catch {
       return false;
@@ -36,7 +36,7 @@ export class SessionManager {
 
   remove(sessionId: string): boolean {
     try {
-      execFileSync(CONFIG.claudeBin, ['rm', sessionId], { timeout: 10_000 });
+      execFileSync(CONFIG.claudeBin, ['rm', sessionId], { timeout: 3_000 });
       return true;
     } catch {
       return false;

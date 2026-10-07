@@ -9,7 +9,7 @@ agentsRouter.get('/', (req, res) => {
   try {
     const args = includeAll ? ['agents', '--json', '--all'] : ['agents', '--json'];
     const output = execFileSync(CONFIG.claudeBin, args, {
-      encoding: 'utf-8', timeout: 10_000,
+      encoding: 'utf-8', timeout: 3_000,
     });
     res.json(JSON.parse(output));
   } catch {
