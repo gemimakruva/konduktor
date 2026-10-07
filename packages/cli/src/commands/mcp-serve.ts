@@ -27,7 +27,9 @@ export async function mcpServe() {
       const result = await tool.handler((args || {}) as Record<string, unknown>);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     } catch (err) {
-      const message = err instanceof TypeError && err.message.includes('fetch')
+      const isConnectionError = (err instanceof TypeError && /fetch|ECONNREFUSED/i.test(err.message))
+        || (err instanceof Error && err.message.includes('ECONNREFUSED'));
+      const message = isConnectionError
         ? 'Konduktor server is not running. Start it with: konduktor start'
         : (err as Error).message;
       return { content: [{ type: 'text' as const, text: message }], isError: true };

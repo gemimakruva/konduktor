@@ -50,7 +50,10 @@ describe('Cron-Agent Integration', () => {
       name: 'Linked', schedule: '* * * * *', prompt: 'work', agentId: agent.id,
     });
     agentRepo.delete(agent.id);
-    const profile = agentRepo.getById(job.agentId!);
+    const reloaded = cronRepo.getById(job.id);
+    expect(reloaded).toBeDefined();
+    expect(reloaded!.agentId).toBe(agent.id);
+    const profile = agentRepo.getById(reloaded!.agentId!);
     expect(profile).toBeUndefined();
   });
 });

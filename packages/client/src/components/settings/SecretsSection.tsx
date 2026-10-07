@@ -6,11 +6,17 @@ interface SecretMeta {
   createdAt: number;
 }
 
+interface AgentProfile {
+  id: number;
+  name: string;
+}
+
 export function SecretsSection() {
   const [secrets, setSecrets] = useState<SecretMeta[]>([]);
   const [name, setName] = useState('');
   const [value, setValue] = useState('');
   const [scope, setScope] = useState('global');
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [error, setError] = useState('');
 
   const refresh = useCallback(async () => {
@@ -18,7 +24,10 @@ export function SecretsSection() {
     if (res.ok) setSecrets(await res.json());
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+    fetch('/api/agents').then(r => r.ok ? r.json() : []).then(setAgents).catch(() => {});
+  }, [refresh]);
 
   const addSecret = async () => {
     setError('');
@@ -38,7 +47,12 @@ export function SecretsSection() {
   };
 
   const revoke = async (secretName: string) => {
-    await fetch(`/api/secrets/${secretName}`, { method: 'DELETE' });
+    const res = await fetch(`/api/secrets/${secretName}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: 'Failed to revoke secret' }));
+      setError(body.error || 'Failed to revoke secret');
+      return;
+    }
     refresh();
   };
 
@@ -92,8 +106,11 @@ export function SecretsSection() {
           style={{ ...inputStyle, width: '140px', fontFamily: 'var(--font-mono)' }} />
         <input placeholder="Value" type="password" value={value} onChange={e => setValue(e.target.value)}
           style={{ ...inputStyle, width: '180px' }} />
-        <select value={scope} onChange={e => setScope(e.target.value)} style={{ ...inputStyle, width: '100px' }}>
+        <select value={scope} onChange={e => setScope(e.target.value)} style={{ ...inputStyle, width: '140px' }}>
           <option value="global">Global</option>
+          {agents.map(a => (
+            <option key={a.id} value={`agent:${a.id}`}>{a.name}</option>
+          ))}
         </select>
         <button onClick={addSecret} style={{
           padding: '6px 12px', border: 'none', borderRadius: 'var(--radius-sm)',

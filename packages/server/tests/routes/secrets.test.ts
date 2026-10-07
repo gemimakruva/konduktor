@@ -29,8 +29,8 @@ beforeAll(async () => {
   });
 });
 
-afterAll(() => {
-  server.close();
+afterAll(async () => {
+  await new Promise<void>(resolve => server.close(() => resolve()));
   rmSync(tempDir, { recursive: true, force: true });
 });
 
