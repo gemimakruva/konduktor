@@ -96,6 +96,68 @@ export interface Settings {
   pinCode?: string;
 }
 
+export interface AnalyticsRecord {
+  id: number;
+  sessionId: string | null;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  thinkingTokens: number;
+  costUsd: number;
+  durationMs: number;
+  createdAt: number;
+}
+
+export interface AnalyticsSummary {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCost: number;
+  totalSessions: number;
+  avgCostPerSession: number;
+}
+
+export interface DailyAnalytics {
+  date: string;
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
+  sessions: number;
+}
+
+export interface ModelAnalytics {
+  model: string;
+  count: number;
+  totalTokens: number;
+  totalCost: number;
+}
+
+export interface CronJob {
+  id: number;
+  name: string;
+  schedule: string;
+  prompt: string;
+  cwd: string | null;
+  model: string | null;
+  enabled: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CronExecution {
+  id: number;
+  jobId: number;
+  sessionId: string | null;
+  status: 'running' | 'completed' | 'failed';
+  output: string;
+  startedAt: number;
+  finishedAt: number | null;
+  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export type WsClientMessage =
   | { type: 'chat:start'; prompt: string; cwd?: string; model?: string; sessionId?: string }
   | { type: 'chat:message'; sessionId: string; prompt: string; cwd?: string; model?: string }
