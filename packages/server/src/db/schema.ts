@@ -86,4 +86,18 @@ export const MIGRATIONS = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_cron_exec_job ON cron_executions(job_id)`,
   `CREATE INDEX IF NOT EXISTS idx_cron_exec_started ON cron_executions(started_at)`,
+  `CREATE TABLE IF NOT EXISTS artifacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT,
+    url TEXT,
+    title TEXT NOT NULL DEFAULT 'Untitled',
+    description TEXT DEFAULT '',
+    icon TEXT DEFAULT 'code',
+    artifact_type TEXT DEFAULT 'html',
+    tags TEXT DEFAULT '[]',
+    pinned INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (unixepoch())
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_artifacts_session ON artifacts(session_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_artifacts_pinned ON artifacts(pinned, created_at)`,
 ];

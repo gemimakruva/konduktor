@@ -167,6 +167,19 @@ export type WsClientMessage =
   | { type: 'sessions:list' }
   | { type: 'sessions:stop'; sessionId: string };
 
+export interface Artifact {
+  id: number;
+  sessionId: string | null;
+  url: string | null;
+  title: string;
+  description: string;
+  icon: string;
+  artifactType: string;
+  tags: string[];
+  pinned: boolean;
+  createdAt: number;
+}
+
 export type WsServerMessage =
   | { type: 'chat:stream'; sessionId: string; event: StreamEvent; eventIndex?: number }
   | { type: 'chat:end'; sessionId: string; result: StreamEvent }
@@ -176,4 +189,5 @@ export type WsServerMessage =
   | { type: 'chat:replay'; sessionId: string; events: StreamEvent[]; currentIndex: number }
   | { type: 'rate_limit'; sessionId: string; retryAfterMs: number }
   | { type: 'sessions:update'; sessions: Session[] }
+  | { type: 'artifact:saved'; artifact: Artifact }
   | { type: 'error'; message: string };
