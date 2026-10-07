@@ -22,9 +22,11 @@ artifactsRouter.get('/:id', (req, res) => {
 
 artifactsRouter.put('/:id', (req, res) => {
   const { tags, pinned, title, description } = req.body;
-  if (tags !== undefined && !Array.isArray(tags)) {
-    res.status(400).json({ error: 'tags must be an array' });
-    return;
+  if (tags !== undefined) {
+    if (!Array.isArray(tags) || !tags.every((t: unknown) => typeof t === 'string')) {
+      res.status(400).json({ error: 'tags must be an array of strings' });
+      return;
+    }
   }
   const repo = new ArtifactRepository(getDb());
   repo.update(Number(req.params.id), { tags, pinned, title, description });

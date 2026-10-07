@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ChatMessage, WsServerMessage, StreamEvent, Artifact } from '@konduktor/shared';
+import type { ChatMessage, WsServerMessage, StreamEvent } from '@konduktor/shared';
 import { useWebSocket } from './useWebSocket';
 
 export interface ArtifactToastData {

@@ -87,6 +87,18 @@ describe('Artifact endpoints', () => {
     expect(res.status).toBe(400);
   });
 
+  it('PUT /api/artifacts/:id rejects non-string tag elements', async () => {
+    const res = await fetch(
+      `http://localhost:${port}/api/artifacts/${createdId}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: ['valid', 123, null] }),
+      },
+    );
+    expect(res.status).toBe(400);
+  });
+
   it('GET /api/artifacts?tag=test filters by tag', async () => {
     const res = await fetch(
       `http://localhost:${port}/api/artifacts?tag=test`,
