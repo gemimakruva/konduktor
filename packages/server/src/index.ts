@@ -84,12 +84,12 @@ export function createApp(opts?: AppOptions): Express {
 
 export function startServer() {
   initDb(CONFIG.dbPath);
-  const scheduler = new CronScheduler(getDb());
-  scheduler.startAll();
   const secrets = new SecretsManager(
     join(CONFIG.configDir, PATHS.secretsFile),
     join(CONFIG.configDir, PATHS.keyFile),
   );
+  const scheduler = new CronScheduler(getDb(), secrets);
+  scheduler.startAll();
 
   const app = createApp({ scheduler, secrets });
   const server = createServer(app);

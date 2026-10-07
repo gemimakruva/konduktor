@@ -4,6 +4,8 @@ import type { CronJob } from '@konduktor/shared';
 import { CronRepository } from '../db/cron-repository.js';
 import { ClaudeProcess } from '../claude/cli.js';
 import { AnalyticsRepository } from '../db/analytics-repository.js';
+import { AgentRepository } from '../db/agent-repository.js';
+import type { SecretsManager } from '../secrets/secrets-manager.js';
 
 type ScheduledTask = ReturnType<typeof cron.schedule>;
 
@@ -13,10 +15,12 @@ export class CronScheduler {
   private repo: CronRepository;
   private db: Database.Database;
   private completionCallback?: (msg: { jobName: string; status: string; executionId: number }) => void;
+  private secrets?: SecretsManager;
 
-  constructor(db: Database.Database) {
+  constructor(db: Database.Database, secrets?: SecretsManager) {
     this.db = db;
     this.repo = new CronRepository(db);
+    this.secrets = secrets;
   }
 
   startAll(): void {
@@ -100,6 +104,13 @@ export class CronScheduler {
       this.runningJobs.delete(job.id);
     });
 
-    proc.start(job.prompt, { cwd: job.cwd || undefined, model: job.model || undefined });
+    const profile = job.agentId ? new AgentRepository(this.db).getById(job.agentId) : undefined;
+    const env = this.secrets?.getForScope(job.agentId || undefined);
+
+    proc.start(job.prompt, {
+      cwd: job.cwd || profile?.defaultCwd || undefined,
+      model: job.model || profile?.model || undefined,
+      env,
+    });
   }
 }
