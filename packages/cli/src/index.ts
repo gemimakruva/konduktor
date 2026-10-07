@@ -1,31 +1,44 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
 import { start } from './commands/start.js';
 import { stop } from './commands/stop.js';
 import { status } from './commands/status.js';
 import { open } from './commands/open.js';
+import { setupMcp } from './commands/setup-mcp.js';
 
-const cmd = process.argv[2];
+const program = new Command();
 
-const commands: Record<string, () => Promise<void>> = { start, stop, status, open };
+program
+  .name('konduktor')
+  .description('Open-source orchestrator for Claude Code')
+  .version('0.1.0');
 
-if (!cmd || !commands[cmd]) {
-  console.log(`
-Konduktor - Open-source orchestrator for Claude Code
-No hacks. No bots. No ToS violations.
+program.command('start')
+  .description('Start the Konduktor server')
+  .option('-o, --open', 'Open in browser after starting')
+  .action(start);
 
-Usage: konduktor <command>
+program.command('stop')
+  .description('Stop the running server')
+  .action(stop);
 
-Commands:
-  start     Start the Konduktor server
-  start -o  Start and open in browser
-  stop      Stop the running server
-  status    Show server status
-  open      Open Konduktor in browser
-`);
-  process.exit(cmd ? 1 : 0);
-}
+program.command('status')
+  .description('Show server status')
+  .action(status);
 
-commands[cmd]().catch(err => {
-  console.error(err.message);
-  process.exit(1);
-});
+program.command('open')
+  .description('Open Konduktor in browser')
+  .action(open);
+
+program.command('setup-mcp')
+  .description('Register Konduktor as an MCP server for Claude Code')
+  .action(setupMcp);
+
+program.command('mcp-serve')
+  .description('Run as MCP server (stdio transport, used by Claude Code)')
+  .action(async () => {
+    const { mcpServe } = await import('./commands/mcp-serve.js');
+    await mcpServe();
+  });
+
+program.parse();

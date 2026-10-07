@@ -9,8 +9,8 @@ import { detectClaude } from './detect.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export async function start() {
-  const shouldOpen = process.argv.includes('--open') || process.argv.includes('-o');
+export async function start(opts: { open?: boolean } = {}) {
+  const shouldOpen = opts.open || false;
 
   const existing = readPid();
   if (existing) {
