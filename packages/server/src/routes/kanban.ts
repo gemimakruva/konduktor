@@ -29,8 +29,20 @@ kanbanRouter.put('/:id', (req, res) => {
 kanbanRouter.put('/:id/move', (req, res) => {
   const { column } = req.body;
   if (!column) { res.status(400).json({ error: 'column required' }); return; }
-  const repo = new KanbanRepository(getDb());
-  repo.moveToColumn(Number(req.params.id), column);
+  const db = getDb();
+  const repo = new KanbanRepository(db);
+  const taskId = Number(req.params.id);
+  repo.moveToColumn(taskId, column);
+  if (column === 'in-progress') {
+    const task = repo.getById(taskId);
+    if (task) {
+      const agents = new AgentRepository(db).list();
+      const available = agents.filter(a => new AssignmentRepository(db).countActive(a.id) < a.maxConcurrentTasks);
+      const suggested = matchAgent(`${task.title} ${task.description}`, available);
+      res.json({ success: true, suggestedAgent: suggested || null });
+      return;
+    }
+  }
   res.json({ success: true });
 });
 
@@ -38,6 +50,11 @@ kanbanRouter.delete('/:id', (req, res) => {
   const repo = new KanbanRepository(getDb());
   repo.delete(Number(req.params.id));
   res.json({ success: true });
+});
+
+kanbanRouter.get('/assignments', (_req, res) => {
+  const repo = new AssignmentRepository(getDb());
+  res.json(repo.list());
 });
 
 kanbanRouter.post('/:id/assign', (req, res) => {

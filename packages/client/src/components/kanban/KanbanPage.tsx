@@ -25,6 +25,9 @@ export function KanbanPage() {
 
   useEffect(() => {
     fetch('/api/profiles').then(r => r.json()).then(setProfiles);
+    fetch('/api/kanban/assignments').then(r => r.json()).then(
+      (list: { taskId: number; agentId: number }[]) => setAssignments(list.map(a => ({ taskId: a.taskId, agentId: a.agentId }))),
+    );
   }, []);
 
   const addTask = async () => {

@@ -94,4 +94,91 @@ describe('Agent Profiles API', () => {
     const check = await fetch(url(`/api/profiles/${created.id}`));
     expect(check.status).toBe(404);
   });
+
+  it('PUT /api/profiles/:id rejects empty name', async () => {
+    const created = await fetch(url('/api/profiles'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Valid' }),
+    }).then(r => r.json());
+    const res = await fetch(url(`/api/profiles/${created.id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: '' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/profiles/:id rejects invalid maxConcurrentTasks', async () => {
+    const created = await fetch(url('/api/profiles'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Valid' }),
+    }).then(r => r.json());
+    const res = await fetch(url(`/api/profiles/${created.id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maxConcurrentTasks: -1 }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/profiles rejects invalid memoryPolicy', async () => {
+    const res = await fetch(url('/api/profiles'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Bad', memoryPolicy: 'invalid' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('DELETE /api/profiles/:id marks active assignments as failed', async () => {
+    const profile = await fetch(url('/api/profiles'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Doomed' }),
+    }).then(r => r.json());
+    const task = await fetch(url('/api/kanban'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Work', column: 'in-progress' }),
+    }).then(r => r.json());
+    await fetch(url(`/api/kanban/${task.id}/assign`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: profile.id }),
+    });
+    await fetch(url(`/api/profiles/${profile.id}`), { method: 'DELETE' });
+    const assignments = await fetch(url('/api/kanban/assignments')).then(r => r.json());
+    const orphaned = assignments.find((a: { agentId: number }) => a.agentId === profile.id);
+    expect(orphaned?.status).toBe('failed');
+  });
+
+  it('GET /api/kanban/assignments returns all assignments', async () => {
+    const res = await fetch(url('/api/kanban/assignments'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+  });
+
+  it('PUT /api/kanban/:id/move to in-progress returns suggestedAgent', async () => {
+    await fetch(url('/api/profiles'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'DevBot', skills: ['deploy', 'testing'] }),
+    });
+    const task = await fetch(url('/api/kanban'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'deploy the app', column: 'backlog' }),
+    }).then(r => r.json());
+    const res = await fetch(url(`/api/kanban/${task.id}/move`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ column: 'in-progress' }),
+    });
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body).toHaveProperty('suggestedAgent');
+  });
 });
