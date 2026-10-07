@@ -326,6 +326,66 @@ Available formats: **JSON** (structured) and **CSV** (spreadsheet-friendly).
 
 ---
 
+## Agent Profiles
+
+Navigate to **Agents** to create and manage agent profiles.
+
+Each agent is a reusable configuration with a name, system prompt, model, working directory, and skill tags. When you move a kanban task to "In Progress", Konduktor matches it to the best-fit agent based on skills.
+
+### Creating an Agent
+
+1. Click **New Agent**
+2. **Name:** `Frontend Dev`
+3. **System Prompt:** `You are a frontend developer specializing in React and TypeScript`
+4. **Model:** (optional) override the default Claude model
+5. **Skills:** `frontend, react, typescript`
+6. Click **Save**
+
+---
+
+## MCP Integration
+
+Konduktor can register itself as an MCP server for Claude Code. This lets Claude configure Konduktor through natural language — creating cron jobs, storing secrets, and managing agents, all from chat.
+
+### Setup
+
+```bash
+# After building, register Konduktor as an MCP server
+node packages/cli/dist/index.js setup-mcp
+
+# Or if you set up the alias:
+konduktor setup-mcp
+```
+
+This adds Konduktor to Claude Code's MCP configuration. After restarting Claude Code, you can say things like:
+
+- "Schedule a daily report at 7 AM"
+- "Store my API key as a secret"
+- "Create a DevOps agent"
+
+---
+
+## Secrets Management
+
+Navigate to **Settings** and scroll to the **Secrets** section.
+
+Secrets are encrypted credentials (API keys, tokens) that get injected as environment variables into agent and cron processes.
+
+### Adding a Secret
+
+1. **Name:** Enter an uppercase name like `OPENAI_API_KEY`
+2. **Value:** Paste the credential (shown as a password field)
+3. **Scope:** Choose **Global** (available to all agents) or a specific agent
+4. Click **Add**
+
+Secrets are encrypted with AES-256-GCM and stored at `~/.konduktor/secrets.json`. The encryption key is in `~/.konduktor/.keyfile` (auto-generated, 0600 permissions).
+
+### Revoking a Secret
+
+Click **Revoke** next to any secret to permanently delete it.
+
+---
+
 ## Capabilities
 
 Navigate to **Capabilities** to see what tools and integrations Claude Code has access to: MCP servers, plugins, skills, and tools.

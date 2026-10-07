@@ -32,6 +32,16 @@ Konduktor is a web dashboard that wraps the official Claude Code CLI, giving you
 - Full-text search across sessions
 - Data export (JSON/CSV)
 
+**Agent Profiles**
+- Named agents with system prompts, model, skills, and working directory
+- Kanban auto-assign based on skill matching
+- Agent performance tracking
+
+**MCP Self-Service**
+- Konduktor as MCP server — 8 tools callable from Claude Code chat
+- Secrets management with AES-256-GCM encryption
+- Auto-registration: `konduktor setup-mcp`
+
 **Settings & Security**
 - Dark/light/system theme
 - LAN access with PIN code authentication
@@ -110,7 +120,7 @@ packages/
 | Backend | Express 5, TypeScript 5.5, better-sqlite3, ws, node-cron |
 | Frontend | React 19, Vite, Recharts |
 | CLI | Node.js, commander |
-| Tests | Vitest (117 tests) |
+| Tests | Vitest (182 tests) |
 
 ## Development
 
@@ -127,8 +137,8 @@ pnpm test        # run all tests
 - [x] Phase 2: Orchestration — kanban, agents, capabilities, search
 - [x] Phase 3: Automation & Analytics — cron, analytics, artifacts, export
 - [x] Phase 4: Advanced Features — thinking blocks, tool visualization, notifications
-- [ ] Phase 5: Agent Profiles + Kanban Auto-Assign
-- [ ] Phase 6: Chat Auto-Configuration (MCP Self-Service)
+- [x] Phase 5: Agent Profiles + Kanban Auto-Assign
+- [x] Phase 6: Chat Auto-Configuration (MCP Self-Service)
 - [ ] Phase 7: Networking + Distribution + Community
 
 See **[Roadmap](docs/roadmap.md)** for detailed scope and deliverables.
