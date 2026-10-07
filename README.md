@@ -1,39 +1,57 @@
 # Konduktor
 
+[![CI](https://github.com/gemimakruva/konduktor/actions/workflows/ci.yml/badge.svg)](https://github.com/gemimakruva/konduktor/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org/)
+
 Open-source orchestrator for Claude Code. No hacks. No bots. No ToS violations.
 
-> Powered by Claude Code CLI subscription. Legal. Open-source. MIT licensed.
+> Powered by your Claude Code CLI subscription. Legal. Open-source. MIT licensed.
 
 ## What is Konduktor?
 
-Konduktor is a web dashboard that wraps the official Claude Code CLI, giving you a visual interface for orchestrating AI-powered development workflows -- all within Anthropic's Terms of Service.
+Konduktor is a web dashboard that wraps the official Claude Code CLI, giving you a visual interface for orchestrating AI-powered development workflows — all within Anthropic's Terms of Service.
 
 ## Features
 
+**Chat & Sessions**
 - Streaming chat interface with real-time output
-- Session management (view, stop, resume Claude Code sessions)
-- Multi-session orchestration (up to 10 concurrent)
-- Dark/light theme with deep purple + cyan identity
-- Settings management via web UI
+- Multi-tab sessions with independent conversations
+- Thinking block visualization (collapsible)
+- Tool use visualization (expandable inline cards with input/output)
+
+**Orchestration**
+- Kanban board for task management
+- Subagent watch and monitoring
+- Cron job scheduling with execution history
+- Up to 10 concurrent sessions
+
+**Data & Insights**
+- Analytics dashboard with token usage and cost tracking
+- Artifact gallery with tagging and preview
+- Full-text search across sessions
+- Data export (JSON/CSV)
+
+**Settings & Security**
+- Dark/light/system theme
 - LAN access with PIN code authentication
-- Dynamic capability discovery (MCP servers, plugins)
+- Desktop notifications for session and cron completion
+- Dynamic capability discovery (MCP servers, plugins, skills)
+
+## Screenshots
+
+*Coming soon — see [Getting Started](docs/getting-started.md) for a full feature walkthrough.*
 
 ## Quick Start
 
-```bash
-npm install -g @konduktor/cli
-konduktor start
-```
+### Prerequisites
 
-Open http://localhost:4170 in your browser.
-
-## Prerequisites
-
-- Node.js >= 20
-- Claude Code CLI (detected automatically, guided install if missing)
+- [Node.js](https://nodejs.org/) >= 20
+- [pnpm](https://pnpm.io/) >= 9
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and authenticated
 - Active Claude subscription (Pro, Team, or Enterprise)
 
-## Development
+### Install & Run
 
 ```bash
 git clone https://github.com/gemimakruva/konduktor.git
@@ -42,13 +60,48 @@ pnpm install
 pnpm dev
 ```
 
-## License
+Open **http://localhost:4170** in your browser.
 
-MIT - PT Makruva Teknologi Nusantara
+## Documentation
+
+- **[Getting Started](docs/getting-started.md)** — installation, setup, and complete feature walkthrough
+- **[Contributing](CONTRIBUTING.md)** — development setup and contribution guidelines
+- **[Changelog](CHANGELOG.md)** — release history
+
+## Architecture
+
+```
+packages/
+  shared/    @konduktor/shared   — types and constants
+  server/    @konduktor/server   — Express 5 + WebSocket + SQLite
+  client/    @konduktor/client   — React 19 + Vite
+  cli/       @konduktor/cli      — CLI entry (start/stop/status)
+```
+
+| Component | Stack |
+|-----------|-------|
+| Backend | Express 5, TypeScript 5.5, better-sqlite3, ws, node-cron |
+| Frontend | React 19, Vite, Recharts |
+| CLI | Node.js, commander |
+| Tests | Vitest (117 tests) |
+
+## Development
+
+```bash
+pnpm install     # install dependencies
+pnpm dev         # start all packages in dev mode
+pnpm build       # build all packages
+pnpm test        # run all tests
+```
 
 ## Roadmap
 
-- Phase 2: Kanban board, subagent watch, capabilities management
-- Phase 3: Cron jobs, artifact integration, analytics
-- Phase 4: Browser automation (Playwright MCP), chat-first setup engine
-- Phase 5: npm publish, docs site, community
+- [x] Phase 1: Foundation — chat, sessions, settings, theme
+- [x] Phase 2: Orchestration — kanban, agents, capabilities, search
+- [x] Phase 3: Automation & Analytics — cron, analytics, artifacts, export
+- [x] Phase 4: Advanced Features — thinking blocks, tool visualization, notifications
+- [ ] Phase 5: npm publish, docs site, community templates
+
+## License
+
+MIT — [PT Makruva Teknologi Nusantara](https://makruva.com)
