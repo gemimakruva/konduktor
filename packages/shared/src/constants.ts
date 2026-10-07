@@ -23,4 +23,6 @@ export const PATHS = {
   configDir: '.konduktor',
   settingsFile: 'settings.json',
   dbFile: 'konduktor.db',
+  secretsFile: 'secrets.json',
+  keyFile: '.keyfile',
 } as const;
