@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { ChatMessage } from '@konduktor/shared';
 import { StreamingText } from './StreamingText';
 import { ThinkingBlock } from './ThinkingBlock';
+import { ToolUseBlock } from './ToolUseBlock';
 
 export function MessageList({ messages }: { messages: ChatMessage[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -63,6 +64,16 @@ function MessageBody({ message }: { message: ChatMessage }) {
       {message.blocks.map((block, i) => {
         if (block.type === 'thinking' && block.text) {
           return <ThinkingBlock key={i} text={block.text} />;
+        }
+        if (block.type === 'tool_use') {
+          const nextBlock = message.blocks![i + 1];
+          const result = nextBlock?.type === 'tool_result' ? nextBlock : undefined;
+          return <ToolUseBlock key={i} block={block} result={result} />;
+        }
+        if (block.type === 'tool_result') {
+          const prevBlock = message.blocks![i - 1];
+          if (prevBlock?.type === 'tool_use') return null;
+          return <ToolUseBlock key={i} block={{ type: 'tool_use', name: 'Tool' }} result={block} />;
         }
         if (block.type === 'text' && block.text) {
           return (
