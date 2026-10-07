@@ -20,7 +20,7 @@ import { CronScheduler } from './cron/scheduler.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
 import { pinAuth } from './middleware/pin-auth.js';
-import { getDb } from './db/connection.js';
+import { initDb, getDb } from './db/connection.js';
 
 export function createApp(scheduler?: CronScheduler): Express {
   const app = express();
@@ -54,6 +54,7 @@ export function createApp(scheduler?: CronScheduler): Express {
 }
 
 export function startServer() {
+  initDb(CONFIG.dbPath);
   const scheduler = new CronScheduler(getDb());
   scheduler.startAll();
 
@@ -82,3 +83,6 @@ export function startServer() {
 
   return server;
 }
+
+import { fileURLToPath } from 'node:url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) startServer();
