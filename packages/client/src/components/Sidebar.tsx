@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Chat', icon: '>' },
   { to: '/sessions', label: 'Sessions', icon: '#' },
   { to: '/agents', label: 'Agents', icon: '&' },
+  { to: '/profiles', label: 'Profiles', icon: '⊕' },
   { to: '/capabilities', label: 'Capabilities', icon: '@' },
   { to: '/logs', label: 'Logs', icon: '~' },
   { to: '/system', label: 'System', icon: '?' },

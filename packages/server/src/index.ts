@@ -19,6 +19,7 @@ import { analyticsRouter } from './routes/analytics.js';
 import { artifactsRouter } from './routes/artifacts.js';
 import { createCronRouter } from './routes/cron.js';
 import { exportRouter } from './routes/export.js';
+import { agentProfilesRouter } from './routes/agent-profiles.js';
 import { CronScheduler } from './cron/scheduler.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
@@ -43,6 +44,7 @@ export function createApp(scheduler?: CronScheduler): Express {
   app.use('/api/analytics', analyticsRouter);
   app.use('/api/artifacts', artifactsRouter);
   app.use('/api/export', exportRouter);
+  app.use('/api/profiles', agentProfilesRouter);
 
   if (scheduler) {
     app.use('/api/cron', createCronRouter(scheduler));
