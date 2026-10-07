@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { ChatMessage } from '@konduktor/shared';
 import { StreamingText } from './StreamingText';
+import { ThinkingBlock } from './ThinkingBlock';
 
 export function MessageList({ messages }: { messages: ChatMessage[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -35,20 +36,54 @@ export function MessageList({ messages }: { messages: ChatMessage[] }) {
           }}>
             {msg.role}
           </div>
-          {msg.isStreaming ? (
-            <StreamingText text={msg.content} />
-          ) : (
-            <div style={{
-              fontSize: '0.875rem', lineHeight: 1.6,
-              fontFamily: msg.role === 'assistant' ? 'var(--font-mono)' : 'inherit',
-              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            }}>
-              {msg.content}
-            </div>
-          )}
+          <MessageBody message={msg} />
         </div>
       ))}
       <div ref={bottomRef} />
+    </div>
+  );
+}
+
+function MessageBody({ message }: { message: ChatMessage }) {
+  if (message.role !== 'assistant' || !message.blocks?.length) {
+    if (message.isStreaming) return <StreamingText text={message.content} />;
+    return (
+      <div style={{
+        fontSize: '0.875rem', lineHeight: 1.6,
+        fontFamily: message.role === 'assistant' ? 'var(--font-mono)' : 'inherit',
+        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+      }}>
+        {message.content}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {message.blocks.map((block, i) => {
+        if (block.type === 'thinking' && block.text) {
+          return <ThinkingBlock key={i} text={block.text} />;
+        }
+        if (block.type === 'text' && block.text) {
+          return (
+            <div key={i} style={{
+              fontSize: '0.875rem', lineHeight: 1.6,
+              fontFamily: 'var(--font-mono)',
+              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>
+              {block.text}
+            </div>
+          );
+        }
+        return null;
+      })}
+      {message.isStreaming && (
+        <span style={{
+          display: 'inline-block', width: '2px', height: '1em',
+          background: 'var(--purple)', marginLeft: '2px',
+          animation: 'blink 1s step-end infinite',
+        }} />
+      )}
     </div>
   );
 }
