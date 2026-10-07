@@ -14,6 +14,7 @@ import { kanbanRouter } from './routes/kanban.js';
 import { agentsRouter } from './routes/agents.js';
 import { analyticsRouter } from './routes/analytics.js';
 import { createCronRouter } from './routes/cron.js';
+import { exportRouter } from './routes/export.js';
 import { CronScheduler } from './cron/scheduler.js';
 import { createWsHandler } from './ws/handler.js';
 import { detectClaude } from './claude/detect.js';
@@ -36,6 +37,7 @@ export function createApp(scheduler?: CronScheduler): Express {
   app.use('/api/kanban', kanbanRouter);
   app.use('/api/agents', agentsRouter);
   app.use('/api/analytics', analyticsRouter);
+  app.use('/api/export', exportRouter);
 
   if (scheduler) {
     app.use('/api/cron', createCronRouter(scheduler));
