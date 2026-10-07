@@ -91,6 +91,7 @@ See **[Getting Started](docs/getting-started.md)** for platform-specific instruc
 ## Documentation
 
 - **[Getting Started](docs/getting-started.md)** — installation, setup, and complete feature walkthrough
+- **[Roadmap](docs/roadmap.md)** — Phase 5-7 plans (agent profiles, MCP self-service, networking)
 - **[Contributing](CONTRIBUTING.md)** — development setup and contribution guidelines
 - **[Changelog](CHANGELOG.md)** — release history
 
@@ -126,7 +127,11 @@ pnpm test        # run all tests
 - [x] Phase 2: Orchestration — kanban, agents, capabilities, search
 - [x] Phase 3: Automation & Analytics — cron, analytics, artifacts, export
 - [x] Phase 4: Advanced Features — thinking blocks, tool visualization, notifications
-- [ ] Phase 5: npm publish, docs site, community templates
+- [ ] Phase 5: Agent Profiles + Kanban Auto-Assign
+- [ ] Phase 6: Chat Auto-Configuration (MCP Self-Service)
+- [ ] Phase 7: Networking + Distribution + Community
+
+See **[Roadmap](docs/roadmap.md)** for detailed scope and deliverables.
 
 ## License
 
