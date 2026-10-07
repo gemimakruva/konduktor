@@ -6,12 +6,70 @@ A step-by-step guide to installing and running Konduktor on **macOS** and **Wind
 
 ## Prerequisites
 
-| Requirement | Check | Install |
-|-------------|-------|---------|
-| **Node.js >= 20** | `node --version` | [nodejs.org](https://nodejs.org/) |
-| **pnpm >= 9** | `pnpm --version` | `npm install -g pnpm` |
-| **Claude Code CLI** | `claude --version` | `npm install -g @anthropic-ai/claude-code` |
-| **Claude subscription** | `claude auth status` | Pro, Team, or Enterprise plan |
+You need 4 things installed before Konduktor will work. Open your terminal (macOS: Terminal, Windows: PowerShell) and run each check command below.
+
+### 1. Git
+
+```bash
+git --version
+```
+
+If you see a version number, you're good. If not:
+
+- **macOS:** `xcode-select --install`
+- **Windows:** Download from [git-scm.com](https://git-scm.com/download/win), run the installer, restart PowerShell
+
+### 2. Node.js (version 20 or higher)
+
+```bash
+node --version
+```
+
+If it says `v20.x.x` or higher, you're good. If not (or if it says "not recognized"):
+
+- Go to [nodejs.org](https://nodejs.org/)
+- Download the **LTS** version (the big green button)
+- Run the installer — accept all defaults
+- **Restart PowerShell / Terminal** after installing
+- Run `node --version` again to confirm
+
+### 3. pnpm (version 9 or higher)
+
+```bash
+pnpm --version
+```
+
+If it says "not recognized" or "command not found", install it:
+
+```bash
+npm install -g pnpm
+```
+
+> **Windows note:** If `npm` is also not recognized, Node.js wasn't installed correctly. Go back to step 2 and make sure to restart PowerShell after installing Node.js.
+
+After installing, verify:
+
+```bash
+pnpm --version
+```
+
+### 4. Claude Code CLI
+
+```bash
+claude --version
+```
+
+If not installed:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+Then authenticate with your Claude subscription (Pro, Team, or Enterprise):
+
+```bash
+claude auth login
+```
 
 ---
 
@@ -36,6 +94,8 @@ pnpm build
 ```
 
 > **Note:** On Windows, use PowerShell or Git Bash. Command Prompt works too but PowerShell is recommended.
+>
+> **If `pnpm install` shows errors about "node-gyp" or "build tools":** Run `npm install -g windows-build-tools` in an Administrator PowerShell, then try again.
 
 ---
 
