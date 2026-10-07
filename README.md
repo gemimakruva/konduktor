@@ -80,10 +80,13 @@ Konduktor is a web dashboard that wraps the official Claude Code CLI, giving you
 git clone https://github.com/gemimakruva/konduktor.git
 cd konduktor
 pnpm install
-pnpm dev
+pnpm build
+pnpm start
 ```
 
-Open **http://localhost:4170** in your browser.
+This builds everything and opens Konduktor at **http://localhost:4170** in your browser.
+
+See **[Getting Started](docs/getting-started.md)** for platform-specific instructions (macOS/Windows), shell shortcuts, and usage examples.
 
 ## Documentation
 

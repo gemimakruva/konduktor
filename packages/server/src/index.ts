@@ -1,5 +1,8 @@
 import express, { type Express } from 'express';
 import { createServer } from 'node:http';
+import { join, dirname } from 'node:path';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { CONFIG } from './config.js';
@@ -50,6 +53,14 @@ export function createApp(scheduler?: CronScheduler): Express {
     res.json({ status: 'ok', version: '0.1.0', claude });
   });
 
+  const clientDist = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'client', 'dist');
+  if (existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get('{*path}', (_req, res) => {
+      res.sendFile(join(clientDist, 'index.html'));
+    });
+  }
+
   return app;
 }
 
@@ -84,5 +95,4 @@ export function startServer() {
   return server;
 }
 
-import { fileURLToPath } from 'node:url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) startServer();

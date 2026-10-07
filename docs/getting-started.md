@@ -1,17 +1,23 @@
 # Getting Started with Konduktor
 
-A complete guide to installing, configuring, and using Konduktor — the open-source orchestrator for Claude Code.
+A step-by-step guide to installing and running Konduktor on **macOS** and **Windows**.
+
+---
 
 ## Prerequisites
 
-Before installing Konduktor, ensure you have:
+| Requirement | Check | Install |
+|-------------|-------|---------|
+| **Node.js >= 20** | `node --version` | [nodejs.org](https://nodejs.org/) |
+| **pnpm >= 9** | `pnpm --version` | `npm install -g pnpm` |
+| **Claude Code CLI** | `claude --version` | `npm install -g @anthropic-ai/claude-code` |
+| **Claude subscription** | `claude auth status` | Pro, Team, or Enterprise plan |
 
-- **Node.js >= 20** — check with `node --version`
-- **pnpm >= 9** — install with `npm install -g pnpm`
-- **Claude Code CLI** — install from [Anthropic](https://docs.anthropic.com/en/docs/claude-code). Verify with `claude --version`
-- **Active Claude subscription** — Pro, Team, or Enterprise plan
+---
 
 ## Installation
+
+### macOS (Terminal)
 
 ```bash
 git clone https://github.com/gemimakruva/konduktor.git
@@ -20,305 +26,363 @@ pnpm install
 pnpm build
 ```
 
-## Starting Konduktor
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/gemimakruva/konduktor.git
+cd konduktor
+pnpm install
+pnpm build
+```
+
+> **Note:** On Windows, use PowerShell or Git Bash. Command Prompt works too but PowerShell is recommended.
+
+---
+
+## Running Konduktor
+
+After install and build, you have three ways to start:
+
+### Option 1: Quick Start (recommended)
+
+```bash
+pnpm start
+```
+
+This starts the server and opens the dashboard in your browser automatically.
+
+### Option 2: CLI Commands
+
+```bash
+# Start the server (runs in background)
+node packages/cli/dist/index.js start
+
+# Start and auto-open browser
+node packages/cli/dist/index.js start --open
+
+# Check if server is running
+node packages/cli/dist/index.js status
+
+# Stop the server
+node packages/cli/dist/index.js stop
+
+# Open dashboard in browser (if server is already running)
+node packages/cli/dist/index.js open
+```
+
+### Option 3: Development Mode
 
 ```bash
 pnpm dev
 ```
 
-This starts the server on `http://localhost:4170` and the client dev server on `http://localhost:4171`.
+This starts both the API server and the Vite dev server with hot reload. Use this when developing Konduktor itself.
 
-For production use:
+| Mode | URL | Use case |
+|------|-----|----------|
+| Production (`pnpm start`) | http://localhost:4170 | Normal usage |
+| Development (`pnpm dev`) | http://localhost:4171 | Contributing / development |
+
+---
+
+## Create a Shortcut (One-Time Setup)
+
+Set up a short command so you can start Konduktor from anywhere.
+
+### macOS / Linux (Bash or Zsh)
+
+Add this to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-pnpm build
-node packages/server/dist/index.js
+alias konduktor='node /full/path/to/konduktor/packages/cli/dist/index.js'
 ```
 
-Open **http://localhost:4170** in your browser. You should see the Konduktor dashboard with a sidebar navigation and a connection indicator.
+Replace `/full/path/to/konduktor` with the actual path where you cloned the repo. To find it:
+
+```bash
+cd konduktor
+pwd
+```
+
+Then reload your shell:
+
+```bash
+source ~/.bashrc    # or source ~/.zshrc
+```
+
+Now you can use:
+
+```bash
+konduktor start     # Start server
+konduktor start -o  # Start and open browser
+konduktor stop      # Stop server
+konduktor status    # Check status
+konduktor open      # Open in browser
+```
+
+### Windows (PowerShell)
+
+Add a function to your PowerShell profile:
+
+```powershell
+# Open your profile (creates it if it doesn't exist)
+if (!(Test-Path -Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }
+notepad $PROFILE
+```
+
+Add this line (replace the path):
+
+```powershell
+function konduktor { node "C:\Users\YourName\konduktor\packages\cli\dist\index.js" $args }
+```
+
+Save, close, and reopen PowerShell. Now you can use:
+
+```powershell
+konduktor start     # Start server
+konduktor start -o  # Start and open browser
+konduktor stop      # Stop server
+konduktor status    # Check status
+konduktor open      # Open in browser
+```
+
+### Windows Desktop Shortcut
+
+1. Right-click Desktop > **New** > **Shortcut**
+2. Location: `node "C:\Users\YourName\konduktor\packages\cli\dist\index.js" start --open`
+3. Name: **Konduktor**
+4. Double-click to start Konduktor and open the dashboard
 
 ---
 
-## Features Walkthrough
+## Verify Setup
 
-### Chat & Sessions
+After starting, open http://localhost:4170 in your browser. You should see:
 
-#### Streaming Chat
+1. **Sidebar** with navigation links (Chat, Sessions, Agents, etc.)
+2. **Chat panel** with a green "Connected" indicator
+3. **"by Makruva"** in the bottom-left corner
 
-The chat interface is the primary way to interact with Claude Code through Konduktor.
+If you see "Disconnected" — the server isn't running. Check your terminal for errors.
+
+---
+
+## Using the Chat
+
+The chat is the main interface for talking to Claude Code through Konduktor.
+
+### Basic Conversation
 
 1. Navigate to **Chat** in the sidebar
-2. Type a prompt in the message input at the bottom
-3. Press Enter or click Send
-4. Watch the response stream in real-time with a blinking cursor
+2. Type a prompt in the input box at the bottom
+3. Press **Enter** or click **Send**
+4. The response streams in real-time
 
-**Expected behavior:**
-- Messages appear incrementally as Claude responds
-- The connection indicator (top of chat area) shows a green dot when connected
-- Assistant responses render in monospace font
+**Multi-tab:** Click **+** in the tab bar to open a new chat session. Each tab is independent — you can work on different tasks in parallel.
 
-#### Multi-Tab Sessions
+### What You'll See in Responses
 
-You can run multiple chat sessions in parallel using tabs.
+**Thinking blocks** — When Claude uses extended thinking, a collapsible `▶ Thinking...` block appears. Click to expand and see the reasoning process.
 
-1. Click the **+** button in the tab bar above the chat
-2. Each tab is an independent session with its own conversation history
-3. Switch between tabs to manage different tasks
-4. Close a tab with the **×** button
+**Tool cards** — When Claude uses tools (Read, Edit, Bash, etc.), inline cards show up with the tool name and its primary argument:
+- `Read: package.json`
+- `Bash: npm test`
+- `Edit: src/app.ts`
 
-**Expected behavior:**
-- Each tab maintains its own message history
-- Streaming in one tab continues while you switch to another
-- The active tab is visually highlighted
+Click a card to see the full input and output.
 
-#### Thinking Blocks
+### Chat Use Cases
 
-When Claude uses extended thinking, the thought process is shown as collapsible blocks.
+**Ask Claude to edit code:**
+```
+Read src/index.ts and add input validation to the createUser function
+```
 
-1. Send a complex prompt that triggers extended thinking
-2. Look for the **▶ Thinking...** block in the response
-3. Click it to expand and read the thinking process
-4. Click again to collapse
+**Run shell commands:**
+```
+Run the test suite and show me which tests are failing
+```
 
-**Expected behavior:**
-- Thinking blocks appear collapsed by default
-- Expanding reveals the full thinking text in dimmed monospace
-- The triangle rotates 90° when expanded
+**Multi-step tasks:**
+```
+Find all TODO comments in the codebase, create a summary, and add them as tasks to the kanban board
+```
 
-#### Tool Use Visualization
-
-When Claude uses tools (Read, Edit, Bash, etc.), each tool call appears as an inline card.
-
-1. Send a prompt that requires tool use (e.g., "read the package.json")
-2. Tool cards appear showing the tool name and primary argument (e.g., `Read: package.json`)
-3. Click a tool card to expand it
-4. Expanded view shows INPUT (JSON) and RESULT sections
-
-**Expected behavior:**
-- Known tools show their primary argument: Read/Edit/Write show file_path, Bash shows command, WebSearch shows query
-- Long arguments are truncated to 60 characters with "..."
-- A "running..." indicator appears before the result arrives
-- Unknown tools fall back to showing the first input value
-
-#### Session Management
-
-1. Navigate to **Sessions** in the sidebar
-2. View all active and past sessions
-3. Stop a running session with the Stop button
-4. Resume a previous session by selecting it
-
-**Expected behavior:**
-- Active sessions show a running indicator
-- Stopped sessions remain in the list for reference
+**Code review:**
+```
+Review the changes in the current git diff and suggest improvements
+```
 
 ---
 
-### Orchestration
+## Configuring Settings
 
-#### Kanban Board
+Navigate to **Settings** in the sidebar. All changes save automatically.
 
-A visual task board for organizing work.
+### Theme
 
-1. Navigate to **Kanban** in the sidebar
-2. View columns: To Do, In Progress, Done
-3. Create new tasks with the Add button
-4. Move tasks between columns
+Choose **Light**, **Dark**, or **System** (follows your OS preference). Changes apply immediately.
 
-**Expected behavior:**
-- Tasks persist across page reloads (stored in SQLite)
-- Each task shows its title and can be edited
+### Max Concurrent Sessions
 
-#### Agent Watch
+Controls how many chat sessions can stream responses at the same time (1–10). Default is 3.
 
-Monitor Claude Code subagent activity.
+**When to change:** If you frequently use multiple tabs and want more parallel Claude responses, increase this. Lower it if you want to conserve your API usage.
 
-1. Navigate to **Agents** in the sidebar
-2. View detected agent processes
-3. See agent status and session associations
+### LAN Access
 
-**Expected behavior:**
-- Shows currently running Claude Code processes
-- Updates reflect actual system state
+Enable to allow other devices on your network to access Konduktor.
 
-#### Cron Job Scheduling
+**Use case:** You're running Konduktor on a desktop but want to monitor sessions from your laptop or phone.
 
-Schedule recurring Claude Code prompts.
+After enabling, Konduktor listens on `0.0.0.0` instead of `127.0.0.1`. Other devices can access it at `http://<your-ip>:4170`.
 
-1. Navigate to **Schedules** in the sidebar
-2. Click **New Job** to create a scheduled task
-3. Fill in:
-   - **Name** — descriptive label
-   - **Schedule** — cron expression (e.g., `0 9 * * *` for daily at 9 AM)
-   - **Prompt** — the instruction for Claude
-   - **Working directory** — optional, defaults to server cwd
-   - **Model** — optional model override
-4. Toggle jobs on/off with the enable switch
-5. Use **Run Now** to trigger a job manually
+> **Note:** Takes effect on the next server restart.
 
-**Expected behavior:**
-- Cron expressions are validated before saving
-- Enabled jobs run automatically on schedule
-- Execution history shows status (completed/failed), output, and timing
-- A desktop notification fires when a cron job completes (if enabled in settings)
+### Desktop Notifications
+
+Enable browser notifications when a chat session or cron job finishes.
+
+**Use case:** You start a long-running task, switch to another app, and get a desktop notification when Claude is done.
+
+**Setup:**
+1. Toggle **Desktop notifications** on
+2. Browser will ask for notification permission — click **Allow**
+3. Notifications fire only when the Konduktor tab is **not** focused
+
+If your browser blocks notifications, you'll see a message with instructions to enable them in browser settings.
 
 ---
 
-### Data
+## Managing Sessions
 
-#### Analytics Dashboard
+Navigate to **Sessions** to see all Claude Code sessions:
 
-Track token usage and costs across all sessions.
-
-1. Navigate to **Analytics** in the sidebar
-2. View charts showing:
-   - Token usage over time (input, output, cache)
-   - Cost breakdown by model
-   - Session duration trends
-3. Filter by date range
-
-**Expected behavior:**
-- Charts render with Recharts
-- Data aggregates from all sessions including cron executions
-- Cost estimates are based on token counts and model pricing
-
-#### Artifact Gallery
-
-Browse and manage Claude Artifacts saved during sessions.
-
-1. Navigate to **Artifacts** in the sidebar
-2. View artifacts in a card grid
-3. Filter by tags using the tag bar
-4. Click a card to preview the artifact in a modal
-5. Pin important artifacts for quick access
-6. Toggle pin status with the pin button
-
-**Expected behavior:**
-- Artifacts are detected automatically from Claude Code output
-- Each card shows title, icon, description, and tags
-- Tag filtering updates the grid in real-time
-- A toast notification appears in chat when an artifact is saved
-
-#### Data Export
-
-Export your data for backup or analysis.
-
-1. Navigate to **Export** in the sidebar
-2. Choose what to export:
-   - Sessions and chat history
-   - Analytics data
-   - Cron jobs and execution history
-3. Select format (JSON or CSV)
-4. Download the export file
-
-**Expected behavior:**
-- Exports reflect current database state
-- JSON exports are pretty-printed
-- CSV exports use standard comma-separated format
-
-#### Search
-
-Full-text search across sessions and messages.
-
-1. Navigate to **Search** in the sidebar
-2. Type a search query
-3. View matching results with context snippets
-4. Click a result to navigate to that session
-
-**Expected behavior:**
-- Search covers message content across all sessions
-- Results show the matching text with surrounding context
+- **Green dot** — session is active
+- **Yellow dot** — session is idle
+- **Stop** — terminate a running session
+- **Remove** — remove a session from the list
 
 ---
 
-### Settings & Notifications
+## Kanban Board
 
-#### Settings Page
+Navigate to **Kanban** for a visual task board with three columns: **To Do**, **In Progress**, **Done**.
 
-Configure Konduktor's behavior.
-
-1. Navigate to **Settings** in the sidebar
-2. Available settings:
-   - **Theme** — light, dark, or system (follows OS preference)
-   - **Max concurrent sessions** — limit parallel sessions (1-10)
-   - **LAN access** — allow connections from other devices on your network
-   - **Desktop notifications** — enable browser notifications for completions
-3. Changes save automatically with a "Settings saved" confirmation
-
-**Expected behavior:**
-- Theme changes apply immediately
-- LAN access changes take effect on server restart
-- Settings persist in `~/.konduktor/settings.json`
-
-#### Desktop Notifications
-
-Get notified when sessions or cron jobs complete while you're in another tab.
-
-1. Go to **Settings** and enable **Desktop notifications**
-2. Your browser will prompt for notification permission — click Allow
-3. Switch to another tab or window
-4. When a chat session or cron job completes, a browser notification appears
-
-**Expected behavior:**
-- Notifications only fire when the Konduktor tab is NOT focused
-- If browser permission is denied, the toggle reverts and shows an error
-- If notifications are blocked at the browser level, a help message appears
-- Toggling the setting takes effect immediately (no page refresh needed)
-
-#### Capabilities Discovery
-
-View what tools and integrations Claude Code has access to.
-
-1. Navigate to **Capabilities** in the sidebar
-2. View detected capabilities grouped by type:
-   - MCP servers
-   - Plugins
-   - Skills
-   - Tools
-3. See installation status and configuration requirements
-
-**Expected behavior:**
-- Capabilities are detected from the Claude Code CLI
-- Status shows installed, available, or missing
+**Use case:** Track development tasks alongside your Claude Code sessions. Create tasks manually or ask Claude to create them via chat.
 
 ---
 
-## Configuration
+## Cron Scheduling
 
-All configuration is managed through the **Settings** page in the web UI. Settings are stored at `~/.konduktor/settings.json` and created automatically on first run.
+Navigate to **Schedules** to set up recurring Claude Code tasks.
 
-## Ports
+### Example: Daily Code Review
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Server | 4170 | API + WebSocket + static files |
-| Client (dev) | 4171 | Vite dev server (proxies to 4170) |
+1. Click **New Job**
+2. **Name:** `daily-review`
+3. **Schedule:** `0 9 * * *` (every day at 9 AM)
+4. **Prompt:** `Review any uncommitted changes in the working directory and summarize potential issues`
+5. **Working directory:** `/path/to/your/project`
+6. Click **Save**
+
+### Example: Hourly Health Check
+
+1. Click **New Job**
+2. **Name:** `health-check`
+3. **Schedule:** `0 * * * *` (every hour)
+4. **Prompt:** `Run the test suite and report any failures`
+5. Click **Save**
+
+Use **Run Now** to test a job manually before enabling the schedule.
+
+---
+
+## Analytics
+
+Navigate to **Analytics** to see:
+- Token usage over time (input, output, cache)
+- Cost breakdown by model
+- Session duration trends
+
+Filter by date range to analyze specific periods.
+
+---
+
+## Search
+
+Navigate to **Search** to find messages across all sessions. Type a keyword and browse matching results with context snippets.
+
+---
+
+## Data Export
+
+Navigate to **Export** to download your data:
+- **Sessions** — all chat history
+- **Analytics** — token usage and cost data
+- **Cron** — job definitions and execution history
+
+Available formats: **JSON** (structured) and **CSV** (spreadsheet-friendly).
+
+---
+
+## Capabilities
+
+Navigate to **Capabilities** to see what tools and integrations Claude Code has access to: MCP servers, plugins, skills, and tools.
+
+---
 
 ## Troubleshooting
 
-### "Disconnected" indicator in chat
+### "Disconnected" in chat
 
-- Ensure the server is running (`pnpm dev` or `node packages/server/dist/index.js`)
-- Check that port 4170 is not in use by another process
-- Look at the terminal for server error messages
+- Ensure the server is running: `konduktor status`
+- Check port 4170 isn't used: `lsof -i :4170` (macOS/Linux) or `netstat -ano | findstr 4170` (Windows)
+- Restart: `konduktor stop && konduktor start`
 
 ### Claude Code not detected
 
-- Verify Claude Code CLI is installed: `claude --version`
-- Ensure you're authenticated: `claude auth status`
-- The CLI must be in your system PATH
+- Verify installation: `claude --version`
+- Authenticate: `claude auth login`
+- Ensure `claude` is in your system PATH
 
-### Cron jobs not running
+### Page loads but shows no data
 
-- Check that the cron expression is valid (standard 5-field format)
-- Verify the job is enabled (toggle is on)
-- Check execution history for error output
-- Ensure Claude Code CLI is accessible from the server's environment
+- The server must be built first: `pnpm build`
+- Check the server logs in your terminal for errors
 
-### Desktop notifications not working
+### Notifications not working
 
 - Check browser notification permissions in browser settings
-- Ensure the setting is enabled in Konduktor Settings
-- Notifications only fire when the tab is not focused — try switching tabs
+- Ensure the toggle is enabled in Konduktor Settings
+- Notifications only fire when the Konduktor tab is **not** in focus
+
+### Windows: `node` not recognized
+
+- Ensure Node.js is installed and added to PATH
+- Restart PowerShell after installing Node.js
+- Try: `where node` to verify it's accessible
+
+### macOS: Permission denied
+
+```bash
+chmod +x packages/cli/dist/index.js
+```
+
+---
+
+## Updating
+
+```bash
+cd konduktor
+git pull
+pnpm install
+pnpm build
+konduktor stop
+konduktor start -o
+```
+
+---
 
 ## License
 

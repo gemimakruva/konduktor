@@ -4,16 +4,21 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULTS } from '@konduktor/shared';
 import { writePid, readPid, clearPid } from '../daemon.js';
+import { openBrowser } from '../browser.js';
 import { detectClaude } from './detect.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function start() {
+  const shouldOpen = process.argv.includes('--open') || process.argv.includes('-o');
+
   const existing = readPid();
   if (existing) {
     try {
       process.kill(existing, 0);
+      const url = `http://localhost:${DEFAULTS.port}`;
       console.log(`Konduktor already running (pid ${existing})`);
+      if (shouldOpen) openBrowser(url);
       return;
     } catch {
       clearPid();
@@ -49,6 +54,8 @@ export async function start() {
   child.unref();
   writePid(child.pid!);
 
+  const url = `http://localhost:${DEFAULTS.port}`;
   console.log(`Konduktor started (pid ${child.pid})`);
-  console.log(`Open http://localhost:${DEFAULTS.port}`);
+  console.log(url);
+  if (shouldOpen) openBrowser(url);
 }
