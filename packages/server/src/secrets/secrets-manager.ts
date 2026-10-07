@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, chmodSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { SecretMeta } from '@konduktor/shared';
-import { loadOrCreateMasterKey, deriveKey, encrypt, decrypt, type EncryptedValue } from './crypto.js';
+import { loadOrCreateMasterKey, deriveKey, encrypt, decrypt } from './crypto.js';
 
 interface StoredSecret {
   name: string;
@@ -48,8 +48,12 @@ export class SecretsManager {
     const secrets = this.load();
     const entry = secrets.find(s => s.name === name);
     if (!entry) return undefined;
-    const key = this.getEncryptionKey();
-    return decrypt({ encrypted: entry.encrypted, iv: entry.iv, tag: entry.tag }, key);
+    try {
+      const key = this.getEncryptionKey();
+      return decrypt({ encrypted: entry.encrypted, iv: entry.iv, tag: entry.tag }, key);
+    } catch {
+      return undefined;
+    }
   }
 
   delete(name: string): boolean {
@@ -63,12 +67,19 @@ export class SecretsManager {
 
   getForScope(agentId?: number): Record<string, string> {
     const secrets = this.load();
-    const key = this.getEncryptionKey();
+    let key: Buffer;
+    try {
+      key = this.getEncryptionKey();
+    } catch {
+      return {};
+    }
     const result: Record<string, string> = {};
     for (const s of secrets) {
       const matches = s.scope === 'global' || (agentId !== undefined && s.scope === `agent:${agentId}`);
       if (matches) {
-        result[s.name] = decrypt({ encrypted: s.encrypted, iv: s.iv, tag: s.tag }, key);
+        try {
+          result[s.name] = decrypt({ encrypted: s.encrypted, iv: s.iv, tag: s.tag }, key);
+        } catch { /* skip undecryptable entry */ }
       }
     }
     return result;

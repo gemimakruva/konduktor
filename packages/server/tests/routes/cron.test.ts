@@ -67,6 +67,21 @@ describe('Cron endpoints', () => {
     expect(Array.isArray(body)).toBe(true);
   });
 
+  it('PUT /api/cron/:id rejects non-numeric agentId', async () => {
+    const create = await fetch(`http://localhost:${port}/api/cron`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'AgentId Test', schedule: '0 9 * * *', prompt: 'test' }),
+    });
+    const job = await create.json();
+    const res = await fetch(`http://localhost:${port}/api/cron/${job.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: 'not-a-number' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('DELETE /api/cron/:id deletes job', async () => {
     const res = await fetch(`http://localhost:${port}/api/cron/${createdId}`, { method: 'DELETE' });
     const body = await res.json();

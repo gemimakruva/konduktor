@@ -27,9 +27,12 @@ export function createCronRouter(scheduler: CronScheduler): RouterType {
 
   router.put('/:id', (req, res) => {
     const id = Number(req.params.id);
-    const { schedule } = req.body;
+    const { schedule, agentId } = req.body;
     if (schedule && !CronScheduler.validate(schedule)) {
       res.status(400).json({ error: 'Invalid cron schedule expression' }); return;
+    }
+    if (agentId !== undefined && agentId !== null && typeof agentId !== 'number') {
+      res.status(400).json({ error: 'agentId must be a number or null' }); return;
     }
     const repo = new CronRepository(getDb());
     repo.update(id, req.body);

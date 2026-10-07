@@ -71,6 +71,26 @@ describe('SecretsManager', () => {
     expect(freshMgr.list()).toHaveLength(0);
   });
 
+  it('get returns undefined when keyfile was replaced', () => {
+    mgr.store('FRAGILE_KEY', 'secret-val', 'global');
+    rmSync(join(tempDir, '.keyfile'));
+    const freshMgr = new SecretsManager(
+      join(tempDir, 'secrets.json'),
+      join(tempDir, '.keyfile'),
+    );
+    expect(freshMgr.get('FRAGILE_KEY')).toBeUndefined();
+  });
+
+  it('getForScope returns empty when keyfile was replaced', () => {
+    mgr.store('ENV_KEY', 'env-val', 'global');
+    rmSync(join(tempDir, '.keyfile'));
+    const freshMgr = new SecretsManager(
+      join(tempDir, 'secrets.json'),
+      join(tempDir, '.keyfile'),
+    );
+    expect(freshMgr.getForScope()).toEqual({});
+  });
+
   it('validates secret name format', () => {
     expect(() => mgr.store('invalid-name', 'val', 'global')).toThrow();
     expect(() => mgr.store('123START', 'val', 'global')).toThrow();
