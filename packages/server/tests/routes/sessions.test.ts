@@ -1,14 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('../../src/claude/sessions.js', () => ({
-  SessionManager: vi.fn().mockImplementation(() => ({
-    list: vi.fn().mockReturnValue([
+vi.mock('../../src/claude/sessions.js', () => {
+  class MockSessionManager {
+    list = vi.fn().mockReturnValue([
       { pid: 1, cwd: '/tmp', kind: 'interactive', startedAt: 1000, sessionId: 'abc', name: 'test', status: 'busy' }
-    ]),
-    stop: vi.fn().mockReturnValue(true),
-    remove: vi.fn().mockReturnValue(true),
-  })),
-}));
+    ]);
+    stop = vi.fn().mockReturnValue(true);
+    remove = vi.fn().mockReturnValue(true);
+  }
+  return { SessionManager: MockSessionManager };
+});
 
 vi.mock('../../src/claude/detect.js', () => ({
   detectClaude: vi.fn().mockReturnValue({ installed: true, version: '1.0.0', authenticated: true }),

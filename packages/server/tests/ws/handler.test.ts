@@ -1,23 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'node:events';
+// EventEmitter used for mockWs below; mock classes use async import
 
-vi.mock('../../src/claude/cli.js', () => ({
-  ClaudeProcess: vi.fn().mockImplementation(() => {
-    const proc = new EventEmitter();
-    Object.assign(proc, {
+vi.mock('../../src/claude/cli.js', async () => {
+  const { EventEmitter } = await import('node:events');
+  function makeMockProc(sessionId: string) {
+    const ee = new EventEmitter();
+    return Object.assign(ee, {
+      sessionId,
       isRunning: true,
       start: vi.fn(),
-      kill: vi.fn(() => { (proc as any).isRunning = false; }),
+      kill: vi.fn(() => { (ee as any).isRunning = false; }),
     });
-    return proc;
-  }),
-}));
+  }
+  return { ClaudeProcess: vi.fn(makeMockProc) };
+});
 
-vi.mock('../../src/claude/sessions.js', () => ({
-  SessionManager: vi.fn().mockImplementation(() => ({
-    list: vi.fn(() => []),
-  })),
-}));
+vi.mock('../../src/claude/sessions.js', () => {
+  class MockSessionManager {
+    list = vi.fn(() => []);
+  }
+  return { SessionManager: MockSessionManager };
+});
 
 import { createWsHandler } from '../../src/ws/handler.js';
 import { ClaudeProcess } from '../../src/claude/cli.js';

@@ -9,29 +9,28 @@ vi.mock('node-cron', () => ({
   },
 }));
 
-vi.mock('../../src/claude/cli.js', () => {
-  const { EventEmitter } = require('node:events');
-  return {
-    ClaudeProcess: vi.fn().mockImplementation(() => {
-      const proc = new EventEmitter();
-      Object.assign(proc, {
-        isRunning: false,
-        start: vi.fn(() => {
-          proc.isRunning = true;
-          setTimeout(() => {
-            proc.emit('event', { type: 'result', content: 'done', usage: {
-              inputTokens: 100, outputTokens: 50, cacheReadTokens: 0,
-              cacheWriteTokens: 0, thinkingTokens: 0, costUsd: 0.01,
-            }, durationMs: 1000 });
-            proc.emit('close', 0);
-            proc.isRunning = false;
-          }, 10);
-        }),
-        kill: vi.fn(() => { proc.isRunning = false; }),
-      });
-      return proc;
-    }),
-  };
+vi.mock('../../src/claude/cli.js', async () => {
+  const { EventEmitter } = await import('node:events');
+  function makeMockProc(sessionId: string) {
+    const ee = new EventEmitter();
+    return Object.assign(ee, {
+      sessionId,
+      isRunning: false,
+      start: vi.fn(() => {
+        (ee as any).isRunning = true;
+        setTimeout(() => {
+          ee.emit('event', { type: 'result', content: 'done', usage: {
+            inputTokens: 100, outputTokens: 50, cacheReadTokens: 0,
+            cacheWriteTokens: 0, thinkingTokens: 0, costUsd: 0.01,
+          }, durationMs: 1000 });
+          ee.emit('close', 0);
+          (ee as any).isRunning = false;
+        }, 10);
+      }),
+      kill: vi.fn(() => { (ee as any).isRunning = false; }),
+    });
+  }
+  return { ClaudeProcess: vi.fn(makeMockProc) };
 });
 
 import cron from 'node-cron';
