@@ -5,6 +5,16 @@
   "bin": {
     "konduktor": "./dist/index.js"
   },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gemimakruva/konduktor",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts"
